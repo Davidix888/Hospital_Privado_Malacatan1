@@ -16,6 +16,7 @@ class DashboardController extends Controller
 
         $access = [
             'administrador' => ['farmacia', 'laboratorio', 'reportes'],
+            'administracion' => ['farmacia', 'laboratorio', 'reportes'],
             'tecnico' => ['laboratorio'],
             'farmaceutico' => ['farmacia'],
             'licenciado' => ['farmacia', 'laboratorio', 'reportes'],

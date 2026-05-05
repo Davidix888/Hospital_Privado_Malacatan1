@@ -26,9 +26,11 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $usuarioInput = mb_strtolower(trim($credentials['usuario']));
+
         $usuario = Usuario::with('rol')
-            ->where('correo', $credentials['usuario'])
-            ->orWhere('nombre_usuario', $credentials['usuario'])
+            ->whereRaw('LOWER(correo) = ?', [$usuarioInput])
+            ->orWhereRaw('LOWER(nombre_usuario) = ?', [$usuarioInput])
             ->first();
 
         if (!$usuario || !$usuario->activo) {

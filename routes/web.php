@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -10,6 +11,11 @@ Route::redirect('/', '/login');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+
+    Route::get('/forgot-password', [PasswordController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordController::class, 'showResetForm'])->name('password.reset.form');
+    Route::post('/reset-password', [PasswordController::class, 'resetWithToken'])->name('password.reset.update');
 });
 
 Route::middleware(['auth.custom'])->group(function () {
@@ -24,5 +30,15 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::view('/farmacia', 'modules.farmacia')->middleware('module.access:farmacia')->name('farmacia');
         Route::view('/laboratorio', 'modules.laboratorio')->middleware('module.access:laboratorio')->name('laboratorio');
         Route::view('/reportes', 'modules.reportes')->middleware('module.access:reportes')->name('reportes');
+
+        Route::middleware('admin.only')->group(function () {
+            Route::get('/usuarios', [UserManagementController::class, 'index'])->name('users.index');
+            Route::get('/usuarios/crear', [UserManagementController::class, 'create'])->name('users.create');
+            Route::post('/usuarios', [UserManagementController::class, 'store'])->name('users.store');
+            Route::get('/usuarios/{usuario}/editar', [UserManagementController::class, 'edit'])->name('users.edit');
+            Route::put('/usuarios/{usuario}', [UserManagementController::class, 'update'])->name('users.update');
+            Route::post('/usuarios/{usuario}/toggle', [UserManagementController::class, 'toggle'])->name('users.toggle');
+            Route::delete('/usuarios/{usuario}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+        });
     });
 });

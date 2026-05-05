@@ -1,30 +1,18 @@
-@extends('layouts.app', ['title' => 'Dashboard'])
+﻿@extends('layouts.app', ['title' => 'Dashboard'])
 
 @php
     $labels = [
         'administrador' => 'Administrador',
-        'tecnico' => 'Tecnico',
-        'farmaceutico' => 'Farmaceutico',
+        'administracion' => 'Administración',
+        'tecnico' => 'Técnico',
+        'farmaceutico' => 'Farmacéutico',
         'licenciado' => 'Licenciado',
     ];
 @endphp
 
 @section('content')
-<div class="card" style="padding:14px 18px;background:#e7effa;">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-        <strong style="color:#1d4f91;letter-spacing:.6px;">VISTA PREVIA DE ROLES (PROTOTIPO)</strong>
-        <div class="card" style="padding:4px;display:flex;gap:6px;">
-            @foreach (['tecnico', 'licenciado', 'administrador', 'farmaceutico'] as $tabRole)
-                <span style="padding:9px 16px;border-radius:9px;{{ $rol === $tabRole ? 'background:#1d4f91;color:#fff;font-weight:700;' : 'color:#1f334f;' }}">
-                    {{ $labels[$tabRole] }}
-                </span>
-            @endforeach
-        </div>
-    </div>
-</div>
-
-<div style="display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:10px;flex-wrap:wrap;">
-    <div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+    <div style="flex:1;text-align:center;">
         <h1 style="font-size:40px;margin:0;">Panel del {{ $labels[$rol] ?? 'Usuario' }}</h1>
         <p style="margin:0;color:#51627c;font-size:20px;">Bienvenido(a), {{ $usuario->nombres }} {{ $usuario->apellidos }}.</p>
         @if (session('status'))
@@ -33,33 +21,84 @@
     </div>
     <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button class="btn btn-dark">Cerrar sesion</button>
+        <button class="btn btn-dark" type="submit">Cerrar sesión</button>
     </form>
 </div>
 
-<div style="margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+<div class="main-nav" style="margin-bottom:16px;justify-content:center;">
+    <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Panel</a>
+    @if ($rol === 'administrador' || $rol === 'administracion')
+        <a class="{{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">Usuarios</a>
+    @endif
     @if (in_array('laboratorio', $modulos, true))
-        <div class="card" style="padding:20px;">
-            <h3 style="font-size:30px;margin:0 0 8px;">Laboratorio</h3>
-            <p style="color:#596a83;font-size:19px;">Gestion de pacientes, examenes y seguimiento de estados.</p>
-            <a class="btn" href="{{ route('laboratorio') }}" style="display:inline-block;text-decoration:none;">Entrar a Laboratorio</a>
+        <a class="{{ request()->routeIs('laboratorio') ? 'active' : '' }}" href="{{ route('laboratorio') }}">Laboratorio</a>
+    @endif
+    @if (in_array('farmacia', $modulos, true))
+        <a class="{{ request()->routeIs('farmacia') ? 'active' : '' }}" href="{{ route('farmacia') }}">Farmacia</a>
+    @endif
+    @if (in_array('reportes', $modulos, true))
+        <a class="{{ request()->routeIs('reportes') ? 'active' : '' }}" href="{{ route('reportes') }}">Reportes</a>
+    @endif
+</div>
+
+<div class="card" style="padding:14px 18px;background:#e7effa;text-align:center;">
+    <strong style="color:#1d4f91;letter-spacing:.6px;">ROL ACTIVO: {{ $labels[$rol] ?? 'Usuario' }}</strong>
+</div>
+
+<div class="panel-grid {{ ($rol === 'administrador' || $rol === 'administracion') ? 'admin-grid' : '' }}">
+    @if ($rol === 'administrador' || $rol === 'administracion')
+        <div class="card module-card">
+            <div>
+                <h3>Usuarios</h3>
+                <p>Alta, edición, activación, desactivación y eliminación de cuentas.</p>
+            </div>
+            <a class="btn" href="{{ route('users.index') }}">Entrar a Usuarios</a>
+        </div>
+    @endif
+
+    @if (in_array('laboratorio', $modulos, true))
+        <div class="card module-card">
+            <div>
+                <h3>Laboratorio</h3>
+                <p>Gestión de pacientes, exámenes y seguimiento de estados.</p>
+            </div>
+            <a class="btn" href="{{ route('laboratorio') }}">Entrar a Laboratorio</a>
         </div>
     @endif
 
     @if (in_array('farmacia', $modulos, true))
-        <div class="card" style="padding:20px;">
-            <h3 style="font-size:30px;margin:0 0 8px;">Farmacia</h3>
-            <p style="color:#596a83;font-size:19px;">Inventario, ventas y control de medicamentos.</p>
-            <a class="btn btn-dark" href="{{ route('farmacia') }}" style="display:inline-block;text-decoration:none;">Entrar a Farmacia</a>
+        <div class="card module-card">
+            <div>
+                <h3>Farmacia</h3>
+                <p>Inventario, ventas y control de medicamentos.</p>
+            </div>
+            <a class="btn" href="{{ route('farmacia') }}">Entrar a Farmacia</a>
         </div>
     @endif
 
     @if (in_array('reportes', $modulos, true))
-        <div class="card" style="padding:20px;">
-            <h3 style="font-size:30px;margin:0 0 8px;">Reportes</h3>
-            <p style="color:#596a83;font-size:19px;">Analisis clinico, consumo y actividad por modulo.</p>
-            <a class="btn btn-success" href="{{ route('reportes') }}" style="display:inline-block;text-decoration:none;">Ver Reportes</a>
+        <div class="card module-card">
+            <div>
+                <h3>Reportes</h3>
+                <p>Análisis clínico, consumo y actividad por módulo.</p>
+            </div>
+            <a class="btn" href="{{ route('reportes') }}">Ver Reportes</a>
         </div>
     @endif
 </div>
+
+@if ($rol === 'administrador' || $rol === 'administracion')
+@push('styles')
+<style>
+    .admin-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 900px) {
+        .admin-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+@endpush
+@endif
 @endsection

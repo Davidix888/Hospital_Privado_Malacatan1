@@ -15,16 +15,16 @@ class RequireModuleAccess
 
         $access = [
             'administrador' => ['farmacia', 'laboratorio', 'reportes'],
+            'administracion' => ['farmacia', 'laboratorio', 'reportes'],
             'tecnico' => ['laboratorio'],
             'farmaceutico' => ['farmacia'],
             'licenciado' => ['farmacia', 'laboratorio', 'reportes'],
         ];
 
         if (!in_array($module, $access[$role] ?? [], true)) {
-            abort(403, 'No tienes permiso para acceder a este mÃ³dulo.');
+            abort(403, 'No tienes permiso para acceder a este módulo.');
         }
 
         return $next($request);
     }
 }
-

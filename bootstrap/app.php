@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsurePasswordFresh;
+use App\Http\Middleware\RequireAdmin;
 use App\Http\Middleware\RequireLogin;
 use App\Http\Middleware\RequireModuleAccess;
 
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.custom' => RequireLogin::class,
             'password.fresh' => EnsurePasswordFresh::class,
             'module.access' => RequireModuleAccess::class,
+            'admin.only' => RequireAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

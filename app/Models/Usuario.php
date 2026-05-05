@@ -44,12 +44,14 @@ class Usuario extends Model
 
     public static function buildUniqueUsername(string $nombres, string $apellidos): string
     {
-        $firstName = Str::of(trim($nombres))->explode(' ')->filter()->first() ?? '';
+        $nameParts = Str::of(trim($nombres))->explode(' ')->filter()->values();
+        $firstName = $nameParts->get(0, '');
+        $secondName = $nameParts->get(1, '');
         $firstSurname = Str::of(trim($apellidos))->explode(' ')->filter()->first() ?? '';
 
-        $initial = Str::substr($firstName, 0, 1);
+        $initials = Str::substr($firstName, 0, 1).Str::substr($secondName, 0, 1);
         $surname = (string) Str::of($firstSurname)->ascii()->lower()->replaceMatches('/[^a-z0-9]/', '');
-        $base = (string) Str::of($initial.$surname)->ascii()->lower()->replaceMatches('/[^a-z0-9]/', '');
+        $base = (string) Str::of($initials.$surname)->ascii()->lower()->replaceMatches('/[^a-z0-9]/', '');
 
         if ($base === '') {
             $base = 'usuario';
