@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: hospital_privado_app
+    working_dir: /var/www/html
+    ports:
+      - "8080:80"
+    env_file:
+      - ../.env
+    volumes:
+      - ../:/var/www/html
+    restart: unless-stopped
