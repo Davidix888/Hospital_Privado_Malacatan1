@@ -129,7 +129,19 @@
             margin: 0 0 16px;
         }
 
-        .footer { margin-top: 0; background: linear-gradient(90deg, #11233d, #1a3558); color: #f4f7ff; border-top: 1px solid rgba(255,255,255,.1); min-height: 16.67vh; display: flex; align-items: center; flex-shrink: 0; }
+        .footer {
+            margin-top: 0;
+            background: linear-gradient(90deg, #11233d, #1a3558);
+            color: #f4f7ff;
+            border-top: 1px solid rgba(255,255,255,.1);
+            min-height: 16.67vh;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            width: 100vw;
+            max-width: 100vw;
+            margin-left: calc(50% - 50vw);
+        }
         .footer-inner { max-width: 1120px; width: 100%; margin: 0 auto; padding: 14px 16px; text-align: center; font-size: 13px; line-height: 1.8; opacity: .95; }
         .footer-links { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; font-size: 12px; opacity: .9; }
 

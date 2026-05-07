@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FarmaciaController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -27,7 +28,22 @@ Route::middleware(['auth.custom'])->group(function () {
     Route::middleware(['password.fresh'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        Route::view('/farmacia', 'modules.farmacia')->middleware('module.access:farmacia')->name('farmacia');
+        Route::get('/farmacia', [FarmaciaController::class, 'index'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia');
+        Route::post('/farmacia/compras', [FarmaciaController::class, 'storeCompra'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.compras.store');
+        Route::post('/farmacia/ventas', [FarmaciaController::class, 'storeVenta'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.ventas.store');
+        Route::post('/farmacia/devoluciones', [FarmaciaController::class, 'storeDevolucion'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.devoluciones.store');
+        Route::post('/farmacia/medicamentos', [FarmaciaController::class, 'storeMedicamento'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.medicamentos.store');
+
         Route::view('/laboratorio', 'modules.laboratorio')->middleware('module.access:laboratorio')->name('laboratorio');
         Route::view('/reportes', 'modules.reportes')->middleware('module.access:reportes')->name('reportes');
 
