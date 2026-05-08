@@ -43,6 +43,15 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/farmacia/medicamentos', [FarmaciaController::class, 'storeMedicamento'])
             ->middleware('module.access:farmacia')
             ->name('farmacia.medicamentos.store');
+        Route::put('/farmacia/medicamentos/{id}', [FarmaciaController::class, 'updateMedicamento'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.medicamentos.update');
+        Route::post('/farmacia/medicamentos/{id}/toggle', [FarmaciaController::class, 'toggleMedicamento'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.medicamentos.toggle');
+        Route::delete('/farmacia/medicamentos/{id}', [FarmaciaController::class, 'destroyMedicamento'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.medicamentos.destroy');
 
         Route::view('/laboratorio', 'modules.laboratorio')->middleware('module.access:laboratorio')->name('laboratorio');
         Route::view('/reportes', 'modules.reportes')->middleware('module.access:reportes')->name('reportes');

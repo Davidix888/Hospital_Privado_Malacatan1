@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('medicamento', function (Blueprint $table): void {
+            if (!Schema::hasColumn('medicamento', 'activo')) {
+                $table->boolean('activo')->default(true)->after('descripcion');
+            }
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('medicamento', function (Blueprint $table): void {
+            if (Schema::hasColumn('medicamento', 'activo')) {
+                $table->dropColumn('activo');
+            }
+        });
+    }
+};

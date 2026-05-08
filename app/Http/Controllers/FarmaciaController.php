@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -13,18 +14,27 @@ class FarmaciaController extends Controller
 {
     public function index(): View
     {
+        $hasActivo = Schema::hasColumn('medicamento', 'activo');
+
         $medicamentos = DB::table('medicamento as m')
             ->leftJoin('categoria_medicamento as c', 'c.id_categoria', '=', 'm.id_categoria')
             ->select(
                 'm.id_medicamento',
                 'm.nombre',
+                'm.id_categoria',
                 'm.presentacion',
                 'm.concentracion',
                 'm.via_administracion',
                 'm.unidad_medida',
                 'm.codigo_interno',
+                'm.descripcion',
+                DB::raw($hasActivo ? 'm.activo as activo' : '1 as activo'),
+                DB::raw("(SELECT l.precio_venta FROM lote l WHERE l.id_medicamento = m.id_medicamento AND l.stock > 0 ORDER BY l.fecha_vencimiento IS NULL, l.fecha_vencimiento, l.id_lote LIMIT 1) as precio_referencia"),
+                DB::raw("(SELECT COALESCE(SUM(l.stock), 0) FROM lote l WHERE l.id_medicamento = m.id_medicamento AND l.stock > 0) as stock_disponible"),
+                DB::raw("(SELECT MIN(l.fecha_vencimiento) FROM lote l WHERE l.id_medicamento = m.id_medicamento AND l.stock > 0 AND l.fecha_vencimiento IS NOT NULL) as proximo_vencimiento_stock"),
                 'c.nombre_categoria'
             )
+            ->when($hasActivo, fn ($query) => $query->where('m.activo', 1))
             ->orderBy('m.nombre')
             ->get();
 
@@ -38,11 +48,14 @@ class FarmaciaController extends Controller
             ->select(
                 'm.id_medicamento',
                 'm.nombre',
+                'm.id_categoria',
                 'm.presentacion',
                 'm.concentracion',
                 'm.via_administracion',
                 'm.unidad_medida',
                 'm.codigo_interno',
+                'm.descripcion',
+                DB::raw($hasActivo ? 'm.activo as activo' : '1 as activo'),
                 'c.nombre_categoria'
             )
             ->orderBy('m.nombre')
@@ -166,7 +179,7 @@ class FarmaciaController extends Controller
                 $idCategoria = (int) $data['id_categoria'];
             }
 
-            $idMedicamento = DB::table('medicamento')->insertGetId([
+            $payloadMedicamento = [
                 'nombre' => trim((string) $data['nombre']),
                 'id_categoria' => $idCategoria,
                 'presentacion' => trim((string) ($data['presentacion'] ?? '')) ?: null,
@@ -175,7 +188,12 @@ class FarmaciaController extends Controller
                 'unidad_medida' => trim((string) ($data['unidad_medida'] ?? '')) ?: null,
                 'codigo_interno' => null,
                 'descripcion' => trim((string) ($data['descripcion'] ?? '')) ?: null,
-            ], 'id_medicamento');
+            ];
+            if (Schema::hasColumn('medicamento', 'activo')) {
+                $payloadMedicamento['activo'] = 1;
+            }
+
+            $idMedicamento = DB::table('medicamento')->insertGetId($payloadMedicamento, 'id_medicamento');
 
             DB::table('medicamento')
                 ->where('id_medicamento', $idMedicamento)
@@ -184,7 +202,99 @@ class FarmaciaController extends Controller
                 ]);
         });
 
-        return back()->with('status', 'Medicamento registrado correctamente.');
+        return back()->with('status', 'Medicamento registrado correctamente.')
+            ->with('active_section', 'sec-catalogo');
+    }
+
+    public function updateMedicamento(Request $request, int $id): RedirectResponse
+    {
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:180'],
+            'id_categoria' => ['nullable'],
+            'nueva_categoria' => ['nullable', 'string', 'max:120'],
+            'presentacion' => ['nullable', 'string', 'max:100'],
+            'concentracion' => ['nullable', 'string', 'max:100'],
+            'via_administracion' => ['nullable', 'string', 'max:80'],
+            'descripcion' => ['nullable', 'string', 'max:400'],
+        ], $this->validationMessages(), $this->validationAttributes());
+
+        $exists = DB::table('medicamento')->where('id_medicamento', $id)->exists();
+        if (!$exists) {
+            return back()->withErrors(['medicamento' => 'El medicamento a editar no existe.']);
+        }
+
+        DB::transaction(function () use ($data, $id): void {
+            $idCategoria = null;
+            if (($data['id_categoria'] ?? null) === '__nueva__') {
+                $categoriaNombre = trim((string) ($data['nueva_categoria'] ?? ''));
+                if ($categoriaNombre === '') {
+                    throw ValidationException::withMessages([
+                        'nueva_categoria' => 'Debes ingresar el nombre de la categoría.',
+                    ]);
+                }
+
+                $categoria = DB::table('categoria_medicamento')
+                    ->whereRaw('LOWER(nombre_categoria) = ?', [mb_strtolower($categoriaNombre)])
+                    ->first();
+
+                $idCategoria = $categoria
+                    ? (int) $categoria->id_categoria
+                    : DB::table('categoria_medicamento')->insertGetId(['nombre_categoria' => $categoriaNombre], 'id_categoria');
+            } elseif (!empty($data['id_categoria'])) {
+                $idCategoria = (int) $data['id_categoria'];
+            }
+
+            DB::table('medicamento')
+                ->where('id_medicamento', $id)
+                ->update([
+                    'nombre' => trim((string) $data['nombre']),
+                    'id_categoria' => $idCategoria,
+                    'presentacion' => trim((string) ($data['presentacion'] ?? '')) ?: null,
+                    'concentracion' => trim((string) ($data['concentracion'] ?? '')) ?: null,
+                    'via_administracion' => trim((string) ($data['via_administracion'] ?? '')) ?: null,
+                    'descripcion' => trim((string) ($data['descripcion'] ?? '')) ?: null,
+                ]);
+        });
+
+        return back()->with('status', 'Medicamento actualizado correctamente.')
+            ->with('active_section', 'sec-catalogo');
+    }
+
+    public function toggleMedicamento(Request $request, int $id): RedirectResponse
+    {
+        if (!Schema::hasColumn('medicamento', 'activo')) {
+            return back()->withErrors(['medicamento' => 'No existe el campo activo en la tabla medicamento. Ejecuta migraciones.']);
+        }
+
+        $med = DB::table('medicamento')->where('id_medicamento', $id)->first();
+        if (!$med) {
+            return back()->withErrors(['medicamento' => 'El medicamento no existe.']);
+        }
+
+        $nuevoEstado = ((int) ($med->activo ?? 1) === 1) ? 0 : 1;
+        DB::table('medicamento')
+            ->where('id_medicamento', $id)
+            ->update(['activo' => $nuevoEstado]);
+
+        return back()->with('status', $nuevoEstado === 1 ? 'Medicamento activado correctamente.' : 'Medicamento desactivado correctamente.')
+            ->with('active_section', 'sec-catalogo');
+    }
+
+    public function destroyMedicamento(int $id): RedirectResponse
+    {
+        $exists = DB::table('medicamento')->where('id_medicamento', $id)->exists();
+        if (!$exists) {
+            return back()->withErrors(['medicamento' => 'El medicamento no existe.']);
+        }
+
+        $tieneLotes = DB::table('lote')->where('id_medicamento', $id)->exists();
+        if ($tieneLotes) {
+            return back()->withErrors(['medicamento' => 'No se puede eliminar porque el medicamento tiene lotes asociados. Puedes desactivarlo.']);
+        }
+
+        DB::table('medicamento')->where('id_medicamento', $id)->delete();
+        return back()->with('status', 'Medicamento eliminado correctamente.')
+            ->with('active_section', 'sec-catalogo');
     }
 
     public function storeCompra(Request $request): RedirectResponse
@@ -197,11 +307,13 @@ class FarmaciaController extends Controller
             'fecha' => ['required', 'date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id_medicamento' => ['required', 'integer', 'exists:medicamento,id_medicamento'],
-            'items.*.fecha_vencimiento' => ['required', 'date'],
+            'items.*.fecha_vencimiento' => ['required', 'date', 'after_or_equal:fecha'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
             'items.*.precio_compra' => ['required', 'numeric', 'min:0'],
             'items.*.precio_venta' => ['required', 'numeric', 'min:0'],
         ], $this->validationMessages(), $this->validationAttributes());
+
+        $data['items'] = $this->mergeCompraItems($data['items']);
 
         $idUsuario = (int) Session::get('auth_usuario_id');
 
@@ -237,12 +349,6 @@ class FarmaciaController extends Controller
             ], 'id_compra_abastecimiento');
 
             foreach ($data['items'] as $item) {
-                if ($item['fecha_vencimiento'] < $data['fecha']) {
-                    throw ValidationException::withMessages([
-                        'items' => 'La fecha de vencimiento no puede ser menor que la fecha de compra.',
-                    ]);
-                }
-
                 $idLote = DB::table('lote')->insertGetId([
                     'stock' => (int) $item['cantidad'],
                     'fecha_vencimiento' => $item['fecha_vencimiento'],
@@ -259,7 +365,8 @@ class FarmaciaController extends Controller
             }
         });
 
-        return back()->with('status', 'Compra registrada con múltiples medicamentos y lotes ingresados al inventario.');
+        return back()->with('status', 'Compra registrada con múltiples medicamentos y lotes ingresados al inventario.')
+            ->with('active_section', 'sec-compras');
     }
 
     public function storeVenta(Request $request): RedirectResponse
@@ -280,6 +387,8 @@ class FarmaciaController extends Controller
             'items.*.id_medicamento' => ['required', 'integer', 'exists:medicamento,id_medicamento'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
         ], $this->validationMessages(), $this->validationAttributes());
+
+        $data['items'] = $this->mergeVentaItems($data['items']);
 
         $idUsuario = (int) Session::get('auth_usuario_id');
 
@@ -317,7 +426,7 @@ class FarmaciaController extends Controller
                 'id_usuario' => $idUsuario,
             ], 'id_venta');
 
-            foreach ($data['items'] as $item) {
+            foreach ($data['items'] as $idx => $item) {
                 $idMedicamento = (int) $item['id_medicamento'];
                 $cantidadSolicitada = (int) $item['cantidad'];
 
@@ -339,8 +448,15 @@ class FarmaciaController extends Controller
                         ->where('id_medicamento', $idMedicamento)
                         ->value('nombre');
 
+                    if ($stockDisponible <= 0) {
+                        throw ValidationException::withMessages([
+                            "items.$idx.cantidad" => 'No hay stock disponible para '.$nombreMed.'.',
+                        ]);
+                    }
+
+                    $faltante = $cantidadSolicitada - $stockDisponible;
                     throw ValidationException::withMessages([
-                        'items' => 'Stock insuficiente para '.$nombreMed.'. Disponible: '.$stockDisponible,
+                        "items.$idx.cantidad" => 'Stock insuficiente para '.$nombreMed.'. Disponible: '.$stockDisponible.'. Faltan: '.$faltante.' unidades.',
                     ]);
                 }
 
@@ -370,7 +486,8 @@ class FarmaciaController extends Controller
             }
         });
 
-        return back()->with('status', 'Venta registrada con múltiples medicamentos y stock descontado por lote (FEFO).');
+        return back()->with('status', 'Venta registrada con múltiples medicamentos y stock descontado por lote (FEFO).')
+            ->with('active_section', 'sec-ventas');
     }
 
     public function storeDevolucion(Request $request): RedirectResponse
@@ -381,6 +498,7 @@ class FarmaciaController extends Controller
             'cantidad' => ['required', 'integer', 'min:1'],
             'fecha' => ['required', 'date'],
             'motivo' => ['nullable', 'string', 'max:180'],
+            'reingresable' => ['nullable', 'boolean'],
         ], $this->validationMessages(), $this->validationAttributes());
 
         DB::transaction(function () use ($data): void {
@@ -420,14 +538,23 @@ class FarmaciaController extends Controller
                 'cantidad' => (int) $data['cantidad'],
             ]);
 
-            DB::table('lote')
-                ->where('id_lote', (int) $data['id_lote'])
-                ->update([
-                    'stock' => DB::raw('stock + '.(int) $data['cantidad']),
-                ]);
+            $reingresable = (bool) ($data['reingresable'] ?? false);
+            if ($reingresable) {
+                DB::table('lote')
+                    ->where('id_lote', (int) $data['id_lote'])
+                    ->update([
+                        'stock' => DB::raw('stock + '.(int) $data['cantidad']),
+                    ]);
+            }
         });
 
-        return back()->with('status', 'Devolución registrada y stock reintegrado al lote.');
+        $reingresable = (bool) ($data['reingresable'] ?? false);
+        $mensaje = $reingresable
+            ? 'Devolución registrada y stock reintegrado al lote.'
+            : 'Devolución registrada como no reingresable (sin reintegro de stock).';
+
+        return back()->with('status', $mensaje)
+            ->with('active_section', 'sec-devoluciones');
     }
 
     private function validationMessages(): array
@@ -440,6 +567,7 @@ class FarmaciaController extends Controller
             'email' => 'El campo :attribute debe ser un correo válido.',
             'date' => 'El campo :attribute debe ser una fecha válida.',
             'exists' => 'El valor seleccionado en :attribute no existe.',
+            'after_or_equal' => 'El campo :attribute debe ser una fecha igual o posterior a :date.',
             'min' => 'El campo :attribute debe ser como mínimo :min.',
             'max' => 'El campo :attribute no puede exceder :max caracteres.',
             'array' => 'El campo :attribute debe ser una lista válida.',
@@ -484,6 +612,61 @@ class FarmaciaController extends Controller
             'items.*.precio_compra' => 'precio de compra en la línea',
             'items.*.precio_venta' => 'precio de venta en la línea',
             'motivo' => 'motivo',
+            'reingresable' => 'reingresable a stock',
         ];
+    }
+
+    private function mergeVentaItems(array $items): array
+    {
+        $merged = [];
+        foreach ($items as $item) {
+            $idMedicamento = (int) ($item['id_medicamento'] ?? 0);
+            $cantidad = (int) ($item['cantidad'] ?? 0);
+            if ($idMedicamento <= 0 || $cantidad <= 0) {
+                continue;
+            }
+
+            $key = (string) $idMedicamento;
+            if (!isset($merged[$key])) {
+                $merged[$key] = [
+                    'id_medicamento' => $idMedicamento,
+                    'cantidad' => $cantidad,
+                ];
+            } else {
+                $merged[$key]['cantidad'] += $cantidad;
+            }
+        }
+
+        return array_values($merged);
+    }
+
+    private function mergeCompraItems(array $items): array
+    {
+        $merged = [];
+        foreach ($items as $item) {
+            $idMedicamento = (int) ($item['id_medicamento'] ?? 0);
+            $cantidad = (int) ($item['cantidad'] ?? 0);
+            $fechaVenc = (string) ($item['fecha_vencimiento'] ?? '');
+            $precioCompra = (float) ($item['precio_compra'] ?? 0);
+            $precioVenta = (float) ($item['precio_venta'] ?? 0);
+            if ($idMedicamento <= 0 || $cantidad <= 0 || $fechaVenc === '') {
+                continue;
+            }
+
+            $key = $idMedicamento.'|'.$fechaVenc.'|'.number_format($precioCompra, 4, '.', '').'|'.number_format($precioVenta, 4, '.', '');
+            if (!isset($merged[$key])) {
+                $merged[$key] = [
+                    'id_medicamento' => $idMedicamento,
+                    'cantidad' => $cantidad,
+                    'fecha_vencimiento' => $fechaVenc,
+                    'precio_compra' => $precioCompra,
+                    'precio_venta' => $precioVenta,
+                ];
+            } else {
+                $merged[$key]['cantidad'] += $cantidad;
+            }
+        }
+
+        return array_values($merged);
     }
 }
