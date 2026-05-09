@@ -314,6 +314,11 @@ class FarmaciaController extends Controller
         ], $this->validationMessages(), $this->validationAttributes());
 
         $data['items'] = $this->mergeCompraItems($data['items']);
+        if (count($data['items']) === 0) {
+            throw ValidationException::withMessages([
+                'items' => 'Debes ingresar al menos una línea válida para registrar la compra.',
+            ]);
+        }
 
         $idUsuario = (int) Session::get('auth_usuario_id');
 
@@ -379,7 +384,7 @@ class FarmaciaController extends Controller
             'nuevo_paciente_direccion' => ['nullable', 'string', 'max:220'],
             'nuevo_paciente_correo' => ['nullable', 'email', 'max:150'],
             'nuevo_paciente_fecha_nacimiento' => ['nullable', 'date'],
-            'nuevo_paciente_nit' => ['nullable', 'string', 'max:30'],
+            'nuevo_paciente_nit' => ['required_if:id_paciente,__nuevo__', 'string', 'max:30'],
             'nuevo_paciente_genero' => ['nullable', 'string', 'max:20'],
             'nuevo_paciente_dpi' => ['nullable', 'string', 'max:30'],
             'fecha' => ['required', 'date'],
@@ -389,6 +394,11 @@ class FarmaciaController extends Controller
         ], $this->validationMessages(), $this->validationAttributes());
 
         $data['items'] = $this->mergeVentaItems($data['items']);
+        if (count($data['items']) === 0) {
+            throw ValidationException::withMessages([
+                'items' => 'Debes ingresar al menos una línea válida para registrar la venta.',
+            ]);
+        }
 
         $idUsuario = (int) Session::get('auth_usuario_id');
 
@@ -561,6 +571,7 @@ class FarmaciaController extends Controller
     {
         return [
             'required' => 'El campo :attribute es obligatorio.',
+            'required_if' => 'El campo :attribute es obligatorio para la opción seleccionada.',
             'string' => 'El campo :attribute debe ser texto válido.',
             'integer' => 'El campo :attribute debe ser un número entero.',
             'numeric' => 'El campo :attribute debe ser numérico.',

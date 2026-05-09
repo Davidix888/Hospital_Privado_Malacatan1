@@ -49,6 +49,28 @@
         max-width: 860px;
         margin: 0 auto;
     }
+    .catalog-form-card {
+        margin: 0;
+        max-width: 520px;
+    }
+    .devolucion-form-card {
+        margin: 0;
+        max-width: 520px;
+    }
+    .catalog-form {
+        display: grid;
+        gap: 10px;
+    }
+    .catalog-form .field {
+        margin-bottom: 0;
+    }
+    .catalog-form .row-2 {
+        align-items: end;
+    }
+    .catalog-form .btn {
+        justify-self: start;
+        min-width: 190px;
+    }
     .farm-card h2 { margin: 0 0 8px; font-size: 24px; color: #163760; }
     .farm-card p { margin: 0 0 14px; color: #5b718d; font-size: 14px; }
     .field { margin-bottom: 10px; }
@@ -74,7 +96,16 @@
         display: none;
     }
     .inline-box.show { display: block; }
-    .table-wrap { overflow-x: auto; overflow-y: hidden; border: 1px solid #d3e0ef; border-radius: 12px; background: #fff; max-width: 100%; }
+    .table-wrap {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x pan-y;
+        border: 1px solid #d3e0ef;
+        border-radius: 12px;
+        background: #fff;
+        max-width: 100%;
+    }
     table { width: 100%; border-collapse: collapse; min-width: 900px; }
     th, td { border-bottom: 1px solid #e6edf6; text-align: center; padding: 9px 10px; font-size: 12.5px; vertical-align: middle; }
     th { background: #f2f7fd; color: #234b79; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; font-size: 12px; text-align: center; }
@@ -210,14 +241,112 @@
         color: #5e7591;
         margin: 0 0 8px;
     }
+    .lotes-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+    }
+    .table-pagination-frame {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid #d3e0ef;
+        border-radius: 12px;
+        background: #f7fbff;
+    }
+    .table-pagination-frame .lotes-pagination {
+        justify-content: center;
+        margin-top: 0;
+    }
+    .meds-filter-panel .lotes-filters {
+        grid-template-columns: repeat(4, minmax(170px, 1fr)) auto;
+        align-items: end;
+    }
+    .meds-filter-scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+    }
+    .meds-filter-panel .lotes-filter-actions {
+        justify-content: center;
+        align-items: flex-end;
+    }
+    .meds-filter-panel .lotes-filter-actions .btn {
+        width: 100%;
+        min-height: 40px;
+    }
+    .meds-filter-panel .btn,
+    .meds-filter-panel .lotes-page-btn {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .meds-filter-panel .lotes-count {
+        text-align: center;
+    }
+    .lotes-filter-panel .lotes-filters {
+        grid-template-columns: repeat(5, minmax(150px, 1fr)) auto;
+        align-items: end;
+    }
+    .lotes-filter-panel .lotes-filter-actions {
+        justify-content: center;
+        align-items: flex-end;
+    }
+    .lotes-filter-panel .lotes-filter-actions .btn {
+        width: 100%;
+        min-height: 40px;
+    }
+    .lotes-filter-panel .lotes-count {
+        text-align: center;
+    }
+    .lotes-page-btn {
+        border: 1px solid #c8d8ea;
+        background: #fff;
+        color: #1f446f;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .lotes-page-btn.active {
+        background: #1f4f86;
+        color: #fff;
+        border-color: #1f4f86;
+    }
 
     @media (max-width: 920px) {
         .farm-grid,
         .catalog-grid,
         .ventas-grid,
         .row-2 { grid-template-columns: 1fr; }
+        .catalog-form-card {
+            margin-top: 0;
+            max-width: none;
+        }
+        .devolucion-form-card {
+            max-width: none;
+        }
         .lotes-filters { grid-template-columns: 1fr; }
         .lotes-filter-actions { justify-content: stretch; }
+        .meds-filter-panel .lotes-filters {
+            grid-template-columns: 1fr;
+        }
+        .meds-filter-panel .lotes-filter-actions {
+            justify-content: center;
+        }
+        .meds-filter-panel .lotes-filter-actions .btn {
+            width: 100%;
+        }
+        .lotes-filter-panel .lotes-filters {
+            grid-template-columns: 1fr;
+        }
+        .lotes-filter-panel .lotes-filter-actions {
+            justify-content: center;
+        }
+        .lotes-filter-panel .lotes-filter-actions .btn {
+            width: 100%;
+        }
         .search-card {
             position: static;
         }
@@ -240,7 +369,6 @@
 <div class="header-row">
     <div>
         <h1 class="title" style="font-size:34px;margin:0;">Módulo Farmacia</h1>
-        <p class="muted">Registra catálogo, compras y ventas. El inventario se descuenta por lote con criterio FEFO. El precio de lote se maneja por unidad.</p>
     </div>
     <a href="{{ route('dashboard') }}" class="btn btn-dark">Volver al panel</a>
 </div>
@@ -260,10 +388,10 @@
 
 <section id="sec-catalogo" class="farm-section {{ $activeSection === 'sec-catalogo' ? 'active' : '' }}">
     <div class="catalog-grid">
-        <div class="card farm-card form-card">
+        <div class="card farm-card form-card catalog-form-card">
                 <h2>Registrar medicamento</h2>
-                <p>Ingresa los datos clínicos y administrativos básicos del medicamento.</p>
-                <form method="POST" action="{{ route('farmacia.medicamentos.store') }}">
+                <p>Registro rápido de medicamentos</p>
+                <form method="POST" action="{{ route('farmacia.medicamentos.store') }}" class="catalog-form">
                     @csrf
 
                     <div class="field">
@@ -319,7 +447,36 @@
         </div>
 
         <div>
-            <h2 class="section-title" style="margin-top:0;">Medicamentos registrados</h2>
+            <div class="card farm-card meds-filter-panel" style="padding:12px;margin-bottom:10px;">
+                <div class="meds-filter-scroll">
+                <div class="lotes-filters">
+                    <div class="field">
+                        <label>Código</label>
+                        <input id="flt-med-codigo" class="form-input" placeholder="Ej: ID-00012">
+                    </div>
+                    <div class="field">
+                        <label>Medicamento</label>
+                        <input id="flt-med-nombre" class="form-input" placeholder="Buscar por nombre">
+                    </div>
+                    <div class="field">
+                        <label>Categoría</label>
+                        <input id="flt-med-categoria" class="form-input" placeholder="Buscar por categoría">
+                    </div>
+                    <div class="field">
+                        <label>Estado</label>
+                        <select id="flt-med-estado" class="form-input">
+                            <option value="">Todos</option>
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="lotes-filter-actions">
+                        <button type="button" class="btn btn-dark btn-sm" id="flt-med-clear">Limpiar</button>
+                    </div>
+                </div>
+                </div>
+                <p id="meds-count" class="lotes-count"></p>
+            </div>
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -334,9 +491,15 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="meds-tbody">
                         @forelse ($catalogoMedicamentos as $med)
-                            <tr>
+                            <tr
+                                data-codigo="{{ mb_strtolower($med->codigo_interno ?? '') }}"
+                                data-nombre="{{ mb_strtolower($med->nombre ?? '') }}"
+                                data-categoria="{{ mb_strtolower($med->nombre_categoria ?? '') }}"
+                                data-estado="{{ (int) ($med->activo ?? 1) === 1 ? 'activo' : 'inactivo' }}"
+                                data-edit-target="edit-med-{{ $med->id_medicamento }}"
+                            >
                                 <td>{{ $med->codigo_interno ?? '-' }}</td>
                                 <td>{{ $med->nombre }}</td>
                                 <td>{{ $med->nombre_categoria ?? 'Sin categoría' }}</td>
@@ -459,6 +622,9 @@
                     </tbody>
                 </table>
             </div>
+            <div class="table-pagination-frame">
+                <div id="meds-pagination" class="lotes-pagination"></div>
+            </div>
         </div>
     </div>
 </section>
@@ -467,7 +633,7 @@
     <div class="ventas-grid">
         <div class="card farm-card form-card ventas-form-card">
             <h2>Registrar compra</h2>
-            <p>Busca por ID, código o nombre. Puedes agregar múltiples medicamentos en una sola compra.</p>
+            <p>Ingrese los datos para registrar la compra</p>
             <form method="POST" action="{{ route('farmacia.compras.store') }}">
                 @csrf
                 <div id="compra-items">
@@ -527,7 +693,7 @@
                                 @enderror
                             </div>
                             <div class="field">
-                                <label>Total línea (compra)</label>
+                                <label>Total del próducto</label>
                                 <input class="form-input js-compra-total-linea" value="Q 0.00" disabled>
                             </div>
                         </div>
@@ -571,7 +737,7 @@
                         <input class="form-input" type="date" name="fecha" value="{{ old('fecha', now()->toDateString()) }}" required>
                     </div>
                     <div class="field">
-                        <label>Total estimado de compra</label>
+                        <label>Total general</label>
                         <input class="form-input" id="compra_total_general" value="Q 0.00" disabled>
                     </div>
                 </div>
@@ -593,7 +759,7 @@
     <div class="ventas-grid">
         <div class="card farm-card form-card ventas-form-card">
             <h2>Registrar venta</h2>
-            <p>Busca por ID, código o nombre. Puedes agregar múltiples medicamentos en una sola venta.</p>
+            <p>Ingrese los datos para registrar la venta</p>
             <form method="POST" action="{{ route('farmacia.ventas.store') }}">
                 @csrf
                 <input type="hidden" name="_active_section" value="sec-ventas">
@@ -639,7 +805,7 @@
                 </div>
 
                 <div class="field">
-                    <label>Total estimado de venta</label>
+                    <label>Total general</label>
                     <input class="form-input" id="venta_total_general" value="Q 0.00" disabled>
                 </div>
 
@@ -691,7 +857,7 @@
                         <div class="row-2">
                             <div class="field">
                                 <label>NIT</label>
-                                <input class="form-input" name="nuevo_paciente_nit" placeholder="Ej: CF o 1234567-8">
+                                <input class="form-input" id="nuevo_paciente_nit" name="nuevo_paciente_nit" placeholder="Ej: CF o 1234567-8">
                             </div>
                             <div class="field">
                                 <label>DPI</label>
@@ -716,7 +882,7 @@
 
         <aside class="search-card">
             <h3 style="margin:0 0 8px;color:#163760;font-size:18px;">Búsqueda rápida</h3>
-            <p class="muted" style="margin-bottom:10px;">Busca por nombre, código o ID. Te muestro 5 sugerencias.</p>
+            <p class="muted" style="margin-bottom:10px;">Ingrese el nombre o código del medicamento que desea buscar</p>
             <input id="venta-busqueda-global" class="form-input" placeholder="Ej: amoxi, ID-00003, 3">
             <ul id="venta-sugerencias" class="search-suggestions"></ul>
             <p id="venta-sugerencias-empty" class="search-empty">Sin resultados.</p>
@@ -726,9 +892,9 @@
 
 <section id="sec-devoluciones" class="farm-section {{ $activeSection === 'sec-devoluciones' ? 'active' : '' }}">
     <div class="catalog-grid">
-        <div class="card farm-card form-card">
+        <div class="card farm-card form-card devolucion-form-card">
             <h2>Registrar devolución</h2>
-            <p>Selecciona una línea vendida y registra la cantidad a devolver. El stock se reintegra al lote original.</p>
+            <p>Ingrese los datos solicitados para realizar la devolución</p>
             <form method="POST" action="{{ route('farmacia.devoluciones.store') }}">
                 @csrf
 
@@ -831,36 +997,30 @@
                     <th>Medicamento</th>
                     <th>Stock total</th>
                     <th>Lotes activos</th>
-                    <th>Próximo vencimiento</th>
                     <th>Estado</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse ($inventario as $item)
                     @php
-                        $vencimiento = $item->proximo_vencimiento ? \Illuminate\Support\Carbon::parse($item->proximo_vencimiento) : null;
-                        $hoy = now()->startOfDay();
-                        $dias = $vencimiento ? $hoy->diffInDays($vencimiento, false) : null;
+                        $isLowStockInventario = (int) $item->stock_total > 0 && (int) $item->stock_total <= 20;
                     @endphp
                     <tr>
                         <td>{{ $item->medicamento }}</td>
                         <td>{{ $item->stock_total }}</td>
                         <td>{{ (int) $item->lotes_activos }}</td>
-                        <td>{{ $item->proximo_vencimiento ?? 'Sin fecha' }}</td>
                         <td>
-                            @if ((int) $item->stock_total <= 0 || !$vencimiento)
+                            @if ((int) $item->stock_total <= 0)
                                 <span class="pill pill-empty">Sin stock</span>
-                            @elseif ($dias < 0)
-                                <span class="pill pill-expired">Vencido</span>
-                            @elseif ($dias <= 30)
-                                <span class="pill pill-soon">Por vencer ({{ $dias }} días)</span>
+                            @elseif ($isLowStockInventario)
+                                <span class="pill pill-soon">Bajo stock total ({{ (int) $item->stock_total }})</span>
                             @else
-                                <span class="pill pill-ok">Vigente</span>
+                                <span class="pill pill-ok">Stock suficiente</span>
                             @endif
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5">No hay información de inventario registrada.</td></tr>
+                    <tr><td colspan="4">No hay información de inventario registrada.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -869,7 +1029,8 @@
 
 <section id="sec-lotes" class="farm-section {{ $activeSection === 'sec-lotes' ? 'active' : '' }}">
     <h2 class="section-title">Lotes con stock disponible</h2>
-    <div class="card farm-card" style="padding:12px;margin-bottom:10px;">
+    <div class="card farm-card lotes-filter-panel" style="padding:12px;margin-bottom:10px;">
+        <div class="meds-filter-scroll">
         <div class="lotes-filters">
             <div class="field">
                 <label>Medicamento</label>
@@ -900,6 +1061,7 @@
                 <button type="button" class="btn btn-dark btn-sm" id="flt-lote-clear">Limpiar</button>
             </div>
         </div>
+        </div>
         <p id="lotes-count" class="lotes-count"></p>
     </div>
     <div class="table-wrap">
@@ -922,7 +1084,6 @@
                         $hoyLote = now()->startOfDay();
                         $diasLote = $venc ? $hoyLote->diffInDays($venc, false) : null;
                         $estadoLote = !$venc ? 'sin_fecha' : ($diasLote < 0 ? 'vencido' : ($diasLote <= 30 ? 'por_vencer' : 'vigente'));
-                        $isLowStock = (int) $lote->stock <= 10;
                     @endphp
                     <tr
                         data-med="{{ mb_strtolower($lote->medicamento) }}"
@@ -941,6 +1102,8 @@
                                 <span class="pill pill-ok">Vigente</span>
                             @elseif ($estadoLote === 'vencido')
                                 <span class="pill pill-expired">Vencido</span>
+                            @elseif ($estadoLote === 'por_vencer')
+                                <span class="pill pill-soon">Por vencer</span>
                             @else
                                 <span class="pill pill-empty">Sin fecha</span>
                             @endif
@@ -951,10 +1114,7 @@
                             @elseif ($estadoLote === 'por_vencer')
                                 <span class="pill pill-soon">Por vencer ({{ $diasLote }} días)</span>
                             @endif
-                            @if ($isLowStock)
-                                <span class="pill pill-soon">Bajo stock ({{ (int) $lote->stock }})</span>
-                            @endif
-                            @if ($estadoLote !== 'por_vencer' && $estadoLote !== 'vencido' && !$isLowStock)
+                            @if ($estadoLote !== 'por_vencer' && $estadoLote !== 'vencido')
                                 <span class="pill pill-empty">Sin alerta</span>
                             @endif
                         </td>
@@ -964,6 +1124,9 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+    <div class="table-pagination-frame">
+        <div id="lotes-pagination" class="lotes-pagination"></div>
     </div>
 </section>
 
@@ -1023,7 +1186,17 @@
 
     const selPaciente = document.getElementById('id_paciente');
     const boxPaciente = document.getElementById('box_nuevo_paciente');
-    const togglePaciente = () => boxPaciente.classList.toggle('show', selPaciente.value === '__nuevo__');
+    const inPacNombre = document.querySelector('input[name="nuevo_paciente_nombre"]');
+    const inPacApellido = document.querySelector('input[name="nuevo_paciente_apellido"]');
+    const inPacNit = document.getElementById('nuevo_paciente_nit');
+    const togglePaciente = () => {
+        const isNuevo = selPaciente.value === '__nuevo__';
+        boxPaciente.classList.toggle('show', isNuevo);
+        [inPacNombre, inPacApellido, inPacNit].forEach((input) => {
+            if (!input) return;
+            input.required = isNuevo;
+        });
+    };
     selPaciente.addEventListener('change', togglePaciente);
     togglePaciente();
 
@@ -1440,16 +1613,129 @@
     const fltLoteClear = document.getElementById('flt-lote-clear');
     const lotesTbody = document.getElementById('lotes-tbody');
     const lotesCount = document.getElementById('lotes-count');
+    const lotesPagination = document.getElementById('lotes-pagination');
+    const fltMedCodigo = document.getElementById('flt-med-codigo');
+    const fltMedNombre = document.getElementById('flt-med-nombre');
+    const fltMedCategoria = document.getElementById('flt-med-categoria');
+    const fltMedEstado = document.getElementById('flt-med-estado');
+    const fltMedClear = document.getElementById('flt-med-clear');
+    const medsTbody = document.getElementById('meds-tbody');
+    const medsCount = document.getElementById('meds-count');
+    const medsPagination = document.getElementById('meds-pagination');
 
-    if (lotesTbody && lotesCount) {
+    if (medsTbody && medsCount && medsPagination) {
+        const rows = Array.from(medsTbody.querySelectorAll('tr[data-nombre]'));
+        const pageSize = 10;
+        let currentPage = 1;
+
+        const renderPagination = (totalPages) => {
+            medsPagination.innerHTML = '';
+            if (totalPages <= 1) return;
+            for (let page = 1; page <= totalPages; page += 1) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `lotes-page-btn${page === currentPage ? ' active' : ''}`;
+                btn.textContent = String(page);
+                btn.addEventListener('click', () => {
+                    currentPage = page;
+                    applyMedsFilters();
+                });
+                medsPagination.appendChild(btn);
+            }
+        };
+
+        const applyMedsFilters = () => {
+            const qCodigo = (fltMedCodigo?.value || '').trim().toLowerCase();
+            const qNombre = (fltMedNombre?.value || '').trim().toLowerCase();
+            const qCategoria = (fltMedCategoria?.value || '').trim().toLowerCase();
+            const estado = fltMedEstado?.value || '';
+            const filteredRows = [];
+
+            rows.forEach((row) => {
+                const codigo = row.dataset.codigo || '';
+                const nombre = row.dataset.nombre || '';
+                const categoria = row.dataset.categoria || '';
+                const rowEstado = row.dataset.estado || '';
+                const editTarget = row.dataset.editTarget || '';
+                const editRow = editTarget ? document.getElementById(editTarget) : null;
+
+                const okCodigo = qCodigo === '' || codigo.includes(qCodigo);
+                const okNombre = qNombre === '' || nombre.includes(qNombre);
+                const okCategoria = qCategoria === '' || categoria.includes(qCategoria);
+                const okEstado = estado === '' || rowEstado === estado;
+                const show = okCodigo && okNombre && okCategoria && okEstado;
+
+                if (show) filteredRows.push(row);
+                row.style.display = 'none';
+                if (editRow) editRow.classList.remove('show');
+            });
+
+            const totalFiltered = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            filteredRows.slice(start, end).forEach((row) => {
+                row.style.display = '';
+            });
+
+            const showing = totalFiltered === 0 ? 0 : Math.min(pageSize, totalFiltered - start);
+            medsCount.textContent = `Mostrando ${showing} de ${totalFiltered} medicamentos filtrados.`;
+            renderPagination(totalPages);
+        };
+
+        [fltMedCodigo, fltMedNombre, fltMedCategoria, fltMedEstado].forEach((el) => {
+            el?.addEventListener('input', () => {
+                currentPage = 1;
+                applyMedsFilters();
+            });
+            el?.addEventListener('change', () => {
+                currentPage = 1;
+                applyMedsFilters();
+            });
+        });
+        fltMedClear?.addEventListener('click', () => {
+            if (fltMedCodigo) fltMedCodigo.value = '';
+            if (fltMedNombre) fltMedNombre.value = '';
+            if (fltMedCategoria) fltMedCategoria.value = '';
+            if (fltMedEstado) fltMedEstado.value = '';
+            currentPage = 1;
+            applyMedsFilters();
+        });
+        applyMedsFilters();
+    }
+
+    if (lotesTbody && lotesCount && lotesPagination) {
         const rows = Array.from(lotesTbody.querySelectorAll('tr[data-med]'));
+        const pageSize = 10;
+        let currentPage = 1;
+
+        const renderPagination = (totalPages) => {
+            lotesPagination.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            for (let page = 1; page <= totalPages; page += 1) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `lotes-page-btn${page === currentPage ? ' active' : ''}`;
+                btn.textContent = String(page);
+                btn.addEventListener('click', () => {
+                    currentPage = page;
+                    applyLotesFilters(false);
+                });
+                lotesPagination.appendChild(btn);
+            }
+        };
+
         const applyLotesFilters = () => {
             const qMed = (fltLoteMed?.value || '').trim().toLowerCase();
             const vDesde = fltLoteVDesde?.value || '';
             const vHasta = fltLoteVHasta?.value || '';
             const stockMin = parseInt(fltLoteStockMin?.value || '0', 10);
             const estado = fltLoteEstado?.value || '';
-            let visible = 0;
+            const filteredRows = [];
 
             rows.forEach((row) => {
                 const med = row.dataset.med || '';
@@ -1464,16 +1750,35 @@
                 const okEstado = estado === '' || est === estado;
 
                 const show = okMed && okDesde && okHasta && okStock && okEstado;
-                row.style.display = show ? '' : 'none';
-                if (show) visible += 1;
+                if (show) filteredRows.push(row);
+                row.style.display = 'none';
             });
 
-            lotesCount.textContent = `Mostrando ${visible} de ${rows.length} lotes.`;
+            const totalFiltered = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            filteredRows.slice(start, end).forEach((row) => {
+                row.style.display = '';
+            });
+
+            const showing = totalFiltered === 0 ? 0 : Math.min(pageSize, totalFiltered - start);
+            lotesCount.textContent = `Mostrando ${showing} de ${totalFiltered} lotes filtrados.`;
+            renderPagination(totalPages);
         };
 
         [fltLoteMed, fltLoteVDesde, fltLoteVHasta, fltLoteStockMin, fltLoteEstado].forEach((el) => {
-            el?.addEventListener('input', applyLotesFilters);
-            el?.addEventListener('change', applyLotesFilters);
+            el?.addEventListener('input', () => {
+                currentPage = 1;
+                applyLotesFilters();
+            });
+            el?.addEventListener('change', () => {
+                currentPage = 1;
+                applyLotesFilters();
+            });
         });
         fltLoteClear?.addEventListener('click', () => {
             if (fltLoteMed) fltLoteMed.value = '';
@@ -1481,10 +1786,26 @@
             if (fltLoteVHasta) fltLoteVHasta.value = '';
             if (fltLoteStockMin) fltLoteStockMin.value = '';
             if (fltLoteEstado) fltLoteEstado.value = '';
+            currentPage = 1;
             applyLotesFilters();
         });
         applyLotesFilters();
     }
+
+    const lowercaseSelectors = [
+        'input[name="concentracion_unidad_otra"]',
+        'input[name="via_administracion_otra"]',
+        'input[name^="concentracion_unidad_otra"]',
+        'input[name^="via_administracion_otra"]',
+    ];
+
+    lowercaseSelectors.forEach((selector) => {
+        document.querySelectorAll(selector).forEach((input) => {
+            input.addEventListener('input', () => {
+                input.value = (input.value || '').toLowerCase();
+            });
+        });
+    });
 })();
 </script>
 @endsection

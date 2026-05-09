@@ -2,13 +2,14 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
-class ExampleTest extends TestCase
+class FarmaciaAlgoTest extends TestCase
 {
     /**
-     * A basic test example.
+     * A basic feature test example.
      */
     public function test_root_redirects_to_login(): void
     {
