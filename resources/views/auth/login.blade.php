@@ -3,11 +3,11 @@
 @push('styles')
 <style>
     .login-wrap { min-height: calc(100dvh - 320px); display: grid; place-items: center; padding: 86px 0 18px; }
-    .login-card { width: min(430px, 100%); background: linear-gradient(160deg, #1a3558, #11233d); border-radius: 0; border: 1px solid rgba(209, 225, 245, .45); padding: 76px 28px 28px; position: relative; box-shadow: 0 20px 42px rgba(10, 24, 43, .28); }
-    .avatar-badge { width: 134px; height: 134px; border-radius: 999px; background: #0f2b4d; position: absolute; left: 50%; transform: translateX(-50%); top: -67px; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+    .login-card { width: min(430px, 100%); background: linear-gradient(160deg, #1a3558, #11233d); border-radius: 20px; border: 1px solid rgba(209, 225, 245, .45); padding: 76px 28px 28px; position: relative; box-shadow: 0 24px 46px rgba(10, 24, 43, .28); }
+    .avatar-badge { width: 122px; height: 122px; border-radius: 999px; background: #0f2b4d; position: absolute; left: 50%; transform: translateX(-50%); top: -61px; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); border: 1px solid rgba(220,233,248,.45); }
     .avatar-badge img { width: 66px; height: 66px; object-fit: cover; border-radius: 50%; border: 2px solid rgba(255,255,255,.8); }
     .field { margin-top: 18px; }
-    .field label { color: #dce9f8; font-size: 20px; display: block; margin-bottom: 3px; }
+    .field label { color: #dce9f8; font-size: 18px; display: block; margin-bottom: 3px; }
     .login-card .input { border-bottom-color: rgba(220, 233, 248, .65); color: #f3f8ff; }
     .login-card .input::placeholder { color: rgba(220, 233, 248, .72); }
     .login-card .input:focus { border-bottom-color: #ffffff; }
@@ -15,7 +15,7 @@
     .remember-wrap { display: inline-flex; align-items: center; gap: 8px; }
     .remember-wrap input[type="checkbox"] { accent-color: #dce9f8; width: 14px; height: 14px; }
     .link-reset { color: #d5e9ff; text-decoration: underline; }
-    .login-btn { width: 100%; margin-top: 18px; border-radius: 0; letter-spacing: 1px; font-size: 18px; padding-block: 13px; background: linear-gradient(90deg, #0f2b4d, #1a3558); border: 1px solid rgba(220, 233, 248, .35); }
+    .login-btn { width: 100%; margin-top: 18px; border-radius: 12px; letter-spacing: .8px; font-size: 17px; padding-block: 13px; background: linear-gradient(90deg, #0f2b4d, #1a3558); border: 1px solid rgba(220, 233, 248, .35); }
 </style>
 @endpush
 

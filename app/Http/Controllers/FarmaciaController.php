@@ -681,3 +681,5 @@ class FarmaciaController extends Controller
         return array_values($merged);
     }
 }
+
+

@@ -196,7 +196,8 @@
         background: #fff;
         padding: 14px;
         position: sticky;
-        top: 12px;
+        top: 86px;
+        z-index: 5;
     }
     .search-suggestions {
         list-style: none;
@@ -952,6 +953,32 @@
 
         <div>
             <h2 class="section-title" style="margin-top:0;">Ventas con saldo para devolución</h2>
+            <div class="card farm-card lotes-filter-panel" style="padding:12px;margin-bottom:10px;">
+                <div class="meds-filter-scroll">
+                <div class="lotes-filters">
+                    <div class="field">
+                        <label>ID venta</label>
+                        <input id="flt-dev-venta" class="form-input" placeholder="Ej: 1024">
+                    </div>
+                    <div class="field">
+                        <label>Paciente</label>
+                        <input id="flt-dev-pac" class="form-input" placeholder="Buscar por paciente">
+                    </div>
+                    <div class="field">
+                        <label>Fecha desde</label>
+                        <input id="flt-dev-fecha-desde" class="form-input" type="date">
+                    </div>
+                    <div class="field">
+                        <label>Fecha hasta</label>
+                        <input id="flt-dev-fecha-hasta" class="form-input" type="date">
+                    </div>
+                    <div class="lotes-filter-actions">
+                        <button type="button" class="btn btn-dark btn-sm" id="flt-dev-clear">Limpiar</button>
+                    </div>
+                </div>
+                </div>
+                <p id="dev-count" class="lotes-count"></p>
+            </div>
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -966,14 +993,21 @@
                             <th>Disponible</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="dev-tbody">
                         @forelse ($ventasParaDevolver as $linea)
-                            <tr>
+                            @php
+                                $pacienteDev = trim(($linea->paciente_nombre ?? '').' '.($linea->paciente_apellido ?? '')) ?: 'Consumidor general';
+                            @endphp
+                            <tr
+                                data-venta="{{ (string) $linea->id_venta }}"
+                                data-pac="{{ mb_strtolower((string) $pacienteDev) }}"
+                                data-fecha="{{ (string) ($linea->fecha ?? '') }}"
+                            >
                                 <td>{{ $linea->id_venta }}</td>
                                 <td>{{ $linea->fecha }}</td>
                                 <td>{{ $linea->id_lote }}</td>
                                 <td>{{ $linea->medicamento }}</td>
-                                <td>{{ trim(($linea->paciente_nombre ?? '').' '.($linea->paciente_apellido ?? '')) ?: 'Consumidor general' }}</td>
+                                <td>{{ $pacienteDev }}</td>
                                 <td>{{ $linea->cantidad_vendida }}</td>
                                 <td>{{ $linea->cantidad_devuelta }}</td>
                                 <td>{{ $linea->cantidad_disponible }}</td>
@@ -984,28 +1018,64 @@
                     </tbody>
                 </table>
             </div>
+            <div class="table-pagination-frame">
+                <div id="dev-pagination" class="lotes-pagination"></div>
+            </div>
         </div>
     </div>
 </section>
 
 <section id="sec-inventario" class="farm-section {{ $activeSection === 'sec-inventario' ? 'active' : '' }}">
     <h2 class="section-title">Inventario por medicamento</h2>
+    <div class="card farm-card lotes-filter-panel" style="padding:12px;margin-bottom:10px;">
+        <div class="meds-filter-scroll">
+        <div class="lotes-filters">
+            <div class="field">
+                <label>ID medicamento</label>
+                <input id="flt-inv-id" class="form-input" placeholder="Ej: 12">
+            </div>
+            <div class="field">
+                <label>Medicamento</label>
+                <input id="flt-inv-med" class="form-input" placeholder="Buscar por medicamento">
+            </div>
+            <div class="field">
+                <label>Lotes activos mín.</label>
+                <input id="flt-inv-lotes-min" class="form-input" type="number" min="0" placeholder="0">
+            </div>
+            <div class="field">
+                <label>Stock mín.</label>
+                <input id="flt-inv-stock-min" class="form-input" type="number" min="0" placeholder="0">
+            </div>
+            <div class="lotes-filter-actions">
+                <button type="button" class="btn btn-dark btn-sm" id="flt-inv-clear">Limpiar</button>
+            </div>
+        </div>
+        </div>
+    </div>
+    <p id="inv-count" class="lotes-count"></p>
     <div class="table-wrap">
         <table>
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Medicamento</th>
                     <th>Stock total</th>
                     <th>Lotes activos</th>
                     <th>Estado</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="inv-tbody">
                 @forelse ($inventario as $item)
                     @php
                         $isLowStockInventario = (int) $item->stock_total > 0 && (int) $item->stock_total <= 20;
                     @endphp
-                    <tr>
+                    <tr
+                        data-id="{{ (string) ($item->id_medicamento ?? '') }}"
+                        data-med="{{ mb_strtolower((string) ($item->medicamento ?? '')) }}"
+                        data-stock="{{ (int) ($item->stock_total ?? 0) }}"
+                        data-lotes="{{ (int) ($item->lotes_activos ?? 0) }}"
+                    >
+                        <td>{{ $item->id_medicamento }}</td>
                         <td>{{ $item->medicamento }}</td>
                         <td>{{ $item->stock_total }}</td>
                         <td>{{ (int) $item->lotes_activos }}</td>
@@ -1020,10 +1090,13 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4">No hay información de inventario registrada.</td></tr>
+                    <tr><td colspan="5">No hay información de inventario registrada.</td></tr>
                 @endforelse
             </tbody>
         </table>
+    </div>
+    <div class="table-pagination-frame">
+        <div id="inv-pagination" class="lotes-pagination"></div>
     </div>
 </section>
 
@@ -1622,10 +1695,26 @@
     const medsTbody = document.getElementById('meds-tbody');
     const medsCount = document.getElementById('meds-count');
     const medsPagination = document.getElementById('meds-pagination');
+    const invTbody = document.getElementById('inv-tbody');
+    const invCount = document.getElementById('inv-count');
+    const invPagination = document.getElementById('inv-pagination');
+    const fltInvId = document.getElementById('flt-inv-id');
+    const fltInvMed = document.getElementById('flt-inv-med');
+    const fltInvLotesMin = document.getElementById('flt-inv-lotes-min');
+    const fltInvStockMin = document.getElementById('flt-inv-stock-min');
+    const fltInvClear = document.getElementById('flt-inv-clear');
+    const fltDevVenta = document.getElementById('flt-dev-venta');
+    const fltDevPac = document.getElementById('flt-dev-pac');
+    const fltDevFechaDesde = document.getElementById('flt-dev-fecha-desde');
+    const fltDevFechaHasta = document.getElementById('flt-dev-fecha-hasta');
+    const fltDevClear = document.getElementById('flt-dev-clear');
+    const devTbody = document.getElementById('dev-tbody');
+    const devCount = document.getElementById('dev-count');
+    const devPagination = document.getElementById('dev-pagination');
 
     if (medsTbody && medsCount && medsPagination) {
         const rows = Array.from(medsTbody.querySelectorAll('tr[data-nombre]'));
-        const pageSize = 10;
+        const pageSize = 8;
         let currentPage = 1;
 
         const renderPagination = (totalPages) => {
@@ -1709,7 +1798,7 @@
 
     if (lotesTbody && lotesCount && lotesPagination) {
         const rows = Array.from(lotesTbody.querySelectorAll('tr[data-med]'));
-        const pageSize = 10;
+        const pageSize = 8;
         let currentPage = 1;
 
         const renderPagination = (totalPages) => {
@@ -1790,6 +1879,173 @@
             applyLotesFilters();
         });
         applyLotesFilters();
+    }
+
+    if (devTbody && devCount && devPagination) {
+        const rows = Array.from(devTbody.querySelectorAll('tr[data-venta]'));
+        const pageSize = 8;
+        let currentPage = 1;
+
+        const renderPagination = (totalPages) => {
+            devPagination.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            for (let page = 1; page <= totalPages; page += 1) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `lotes-page-btn${page === currentPage ? ' active' : ''}`;
+                btn.textContent = String(page);
+                btn.addEventListener('click', () => {
+                    currentPage = page;
+                    applyDevFilters();
+                });
+                devPagination.appendChild(btn);
+            }
+        };
+
+        const applyDevFilters = () => {
+            const qVenta = (fltDevVenta?.value || '').trim().toLowerCase();
+            const qPac = (fltDevPac?.value || '').trim().toLowerCase();
+            const fDesde = fltDevFechaDesde?.value || '';
+            const fHasta = fltDevFechaHasta?.value || '';
+            const filteredRows = [];
+
+            rows.forEach((row) => {
+                const venta = (row.dataset.venta || '').toLowerCase();
+                const pac = row.dataset.pac || '';
+                const fecha = row.dataset.fecha || '';
+
+                const okVenta = qVenta === '' || venta.includes(qVenta);
+                const okPac = qPac === '' || pac.includes(qPac);
+                const okDesde = fDesde === '' || (fecha !== '' && fecha >= fDesde);
+                const okHasta = fHasta === '' || (fecha !== '' && fecha <= fHasta);
+                const show = okVenta && okPac && okDesde && okHasta;
+
+                if (show) filteredRows.push(row);
+                row.style.display = 'none';
+            });
+
+            const totalFiltered = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            filteredRows.slice(start, end).forEach((row) => {
+                row.style.display = '';
+            });
+
+            const showing = totalFiltered === 0 ? 0 : Math.min(pageSize, totalFiltered - start);
+            devCount.textContent = `Mostrando ${showing} de ${totalFiltered} líneas de devolución filtradas.`;
+            renderPagination(totalPages);
+        };
+
+        [fltDevVenta, fltDevPac, fltDevFechaDesde, fltDevFechaHasta].forEach((el) => {
+            el?.addEventListener('input', () => {
+                currentPage = 1;
+                applyDevFilters();
+            });
+            el?.addEventListener('change', () => {
+                currentPage = 1;
+                applyDevFilters();
+            });
+        });
+
+        fltDevClear?.addEventListener('click', () => {
+            if (fltDevVenta) fltDevVenta.value = '';
+            if (fltDevPac) fltDevPac.value = '';
+            if (fltDevFechaDesde) fltDevFechaDesde.value = '';
+            if (fltDevFechaHasta) fltDevFechaHasta.value = '';
+            currentPage = 1;
+            applyDevFilters();
+        });
+
+        applyDevFilters();
+    }
+
+    if (invTbody && invCount && invPagination) {
+        const rows = Array.from(invTbody.querySelectorAll('tr[data-med]'));
+        const pageSize = 8;
+        let currentPage = 1;
+
+        const renderPagination = (totalPages) => {
+            invPagination.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            for (let page = 1; page <= totalPages; page += 1) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `lotes-page-btn${page === currentPage ? ' active' : ''}`;
+                btn.textContent = String(page);
+                btn.addEventListener('click', () => {
+                    currentPage = page;
+                    applyInventarioPagination();
+                });
+                invPagination.appendChild(btn);
+            }
+        };
+
+        const applyInventarioPagination = () => {
+            const qId = (fltInvId?.value || '').trim().toLowerCase();
+            const qMed = (fltInvMed?.value || '').trim().toLowerCase();
+            const lotesMin = parseInt(fltInvLotesMin?.value || '0', 10);
+            const stockMin = parseInt(fltInvStockMin?.value || '0', 10);
+            const filteredRows = [];
+
+            rows.forEach((row) => {
+                const id = (row.dataset.id || '').toLowerCase();
+                const med = row.dataset.med || '';
+                const lotes = parseInt(row.dataset.lotes || '0', 10);
+                const stock = parseInt(row.dataset.stock || '0', 10);
+
+                const okId = qId === '' || id.includes(qId);
+                const okMed = qMed === '' || med.includes(qMed);
+                const okLotes = !Number.isFinite(lotesMin) || lotes >= lotesMin;
+                const okStock = !Number.isFinite(stockMin) || stock >= stockMin;
+                const show = okId && okMed && okLotes && okStock;
+
+                if (show) filteredRows.push(row);
+                row.style.display = 'none';
+            });
+
+            const totalRows = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            filteredRows.slice(start, end).forEach((row) => {
+                row.style.display = '';
+            });
+
+            const showing = totalRows === 0 ? 0 : Math.min(pageSize, totalRows - start);
+            invCount.textContent = `Mostrando ${showing} de ${totalRows} medicamentos.`;
+            renderPagination(totalPages);
+        };
+
+        [fltInvId, fltInvMed, fltInvLotesMin, fltInvStockMin].forEach((el) => {
+            el?.addEventListener('input', () => {
+                currentPage = 1;
+                applyInventarioPagination();
+            });
+            el?.addEventListener('change', () => {
+                currentPage = 1;
+                applyInventarioPagination();
+            });
+        });
+
+        fltInvClear?.addEventListener('click', () => {
+            if (fltInvId) fltInvId.value = '';
+            if (fltInvMed) fltInvMed.value = '';
+            if (fltInvLotesMin) fltInvLotesMin.value = '';
+            if (fltInvStockMin) fltInvStockMin.value = '';
+            currentPage = 1;
+            applyInventarioPagination();
+        });
+
+        applyInventarioPagination();
     }
 
     const lowercaseSelectors = [

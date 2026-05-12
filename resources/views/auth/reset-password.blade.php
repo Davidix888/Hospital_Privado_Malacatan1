@@ -1,27 +1,29 @@
-ï»¿@extends('layouts.app', ['title' => 'Restablecer contraseÃ±a'])
+@extends('layouts.app', ['title' => 'Restablecer contraseña'])
 
 @section('content')
-<div class="card" style="max-width:720px;margin:40px auto;padding:26px;">
-    <h1 class="title" style="font-size:34px;">Restablecer contraseÃ±a</h1>
+<div class="card form-shell form-shell-sm">
+    <h1 class="title" style="font-size:34px;">Restablecer contraseña</h1>
 
     @if ($errors->any()) <div class="alert">{{ $errors->first() }}</div> @endif
 
-    <form method="POST" action="{{ route('password.reset.update') }}" style="margin-top:16px;display:grid;gap:14px;">
+    <form method="POST" action="{{ route('password.reset.update') }}" class="form-grid">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
-        <div>
-            <label>Correo electrÃ³nico</label>
-            <input class="input" style="color:#0f243f;border:1px solid #cbd5e1;border-radius:8px;" type="email" name="email" value="{{ old('email', $email) }}" required>
+        <div class="form-field">
+            <label class="form-label">Correo electrónico</label>
+            <input class="form-control" type="email" name="email" value="{{ old('email', $email) }}" required>
         </div>
-        <div>
-            <label>Nueva contraseÃ±a</label>
-            <input class="input" style="color:#0f243f;border:1px solid #cbd5e1;border-radius:8px;" type="password" name="password" minlength="8" required>
+        <div class="form-field">
+            <label class="form-label">Nueva contraseña</label>
+            <input class="form-control" type="password" name="password" minlength="8" required>
         </div>
-        <div>
-            <label>Confirmar contraseÃ±a</label>
-            <input class="input" style="color:#0f243f;border:1px solid #cbd5e1;border-radius:8px;" type="password" name="password_confirmation" minlength="8" required>
+        <div class="form-field">
+            <label class="form-label">Confirmar contraseña</label>
+            <input class="form-control" type="password" name="password_confirmation" minlength="8" required>
         </div>
-        <button class="btn" type="submit">Actualizar contraseÃ±a</button>
+        <div class="form-actions">
+            <button class="btn" type="submit">Actualizar contraseña</button>
+        </div>
     </form>
 </div>
 @endsection

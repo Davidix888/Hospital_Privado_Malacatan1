@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -51,7 +51,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
         Session::put('auth_usuario_id', $usuario->id_usuario);
-        Session::put('auth_rol', Str::of((string) optional($usuario->rol)->nombre_rol)->lower()->ascii()->replace(' ', '')->value());
+        Session::put('auth_rol', Rol::normalizeRoleName((string) optional($usuario->rol)->nombre_rol));
 
         if (
             !$usuario->password_changed_at ||

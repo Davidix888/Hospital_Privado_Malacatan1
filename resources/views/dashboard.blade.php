@@ -4,45 +4,39 @@
     $labels = [
         'administrador' => 'Administrador',
         'administracion' => 'Administración',
-        'tecnico' => 'Técnico',
-        'farmaceutico' => 'Farmacéutico',
-        'licenciado' => 'Licenciado',
+        'farmacia' => 'Farmacia',
+        'laboratorio' => 'Laboratorio',
+        'reportes' => 'Reportes',
     ];
 @endphp
 
+@section('topbar_actions')
+<form method="POST" action="{{ route('logout') }}">
+    @csrf
+    <button class="btn btn-dark" type="submit">Cerrar sesión</button>
+</form>
+@endsection
+
 @section('content')
-<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-    <div style="flex:1;text-align:center;">
-        <h1 style="font-size:40px;margin:0;">Panel del {{ $labels[$rol] ?? 'Usuario' }}</h1>
-        <p style="margin:0;color:#51627c;font-size:20px;">Bienvenido(a), {{ $usuario->nombres }} {{ $usuario->apellidos }}.</p>
+<div class="page-header dashboard-header">
+    <div class="page-header-center">
+        <h1 class="title" style="font-size:40px;margin:0;">
+            {{ in_array($rol, ['administrador', 'administracion'], true) ? 'Panel Administrativo' : 'Panel del ' . ($labels[$rol] ?? 'Usuario') }}
+        </h1>
+        <p class="subtitle" style="margin:0;color:#51627c;font-size:20px;">Bienvenido(a), {{ $usuario->nombres }} {{ $usuario->apellidos }}.</p>
         @if (session('status'))
             <div class="alert ok">{{ session('status') }}</div>
         @endif
     </div>
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button class="btn btn-dark" type="submit">Cerrar sesión</button>
-    </form>
 </div>
 
-<div class="main-nav" style="margin-bottom:16px;justify-content:center;">
-    <a class="{{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Panel</a>
-    @if ($rol === 'administrador' || $rol === 'administracion')
-        <a class="{{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">Usuarios</a>
-    @endif
-    @if (in_array('laboratorio', $modulos, true))
-        <a class="{{ request()->routeIs('laboratorio') ? 'active' : '' }}" href="{{ route('laboratorio') }}">Laboratorio</a>
-    @endif
-    @if (in_array('farmacia', $modulos, true))
-        <a class="{{ request()->routeIs('farmacia') ? 'active' : '' }}" href="{{ route('farmacia') }}">Farmacia</a>
-    @endif
-    @if (in_array('reportes', $modulos, true))
-        <a class="{{ request()->routeIs('reportes') ? 'active' : '' }}" href="{{ route('reportes') }}">Reportes</a>
-    @endif
-</div>
-
-<div class="card" style="padding:14px 18px;background:#e7effa;text-align:center;">
+<div class="soft-panel">
     <strong style="color:#1d4f91;letter-spacing:.6px;">ROL ACTIVO: {{ $labels[$rol] ?? 'Usuario' }}</strong>
+</div>
+
+<div class="quick-strip">
+    <span class="quick-pill">Módulos habilitados: {{ count($modulos) + (($rol === 'administrador' || $rol === 'administracion') ? 1 : 0) }}</span>
+    <span class="quick-pill">Acceso rápido desde este panel</span>
 </div>
 
 <div class="panel-grid {{ ($rol === 'administrador' || $rol === 'administracion') ? 'admin-grid' : '' }}">
@@ -87,18 +81,45 @@
     @endif
 </div>
 
-@if ($rol === 'administrador' || $rol === 'administracion')
 @push('styles')
 <style>
+    .dashboard-header { justify-content: center; }
+    .dashboard-header .page-header-center { flex: 0 1 auto; width: 100%; text-align: center; }
+    .quick-strip {
+        margin-top: 12px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .quick-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid #cddced;
+        background: #f0f6fd;
+        color: #1e466f;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .2px;
+    }
     .admin-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     @media (max-width: 900px) {
+        .dashboard-header {
+            justify-content: center;
+        }
+        .dashboard-header .page-header-center {
+            text-align: center;
+        }
         .admin-grid {
             grid-template-columns: 1fr;
         }
     }
 </style>
 @endpush
-@endif
 @endsection
+

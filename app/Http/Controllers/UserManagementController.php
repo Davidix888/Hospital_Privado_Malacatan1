@@ -106,3 +106,4 @@ class UserManagementController extends Controller
         return back()->with('status', 'Usuario eliminado correctamente.');
     }
 }
+
