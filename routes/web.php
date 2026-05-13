@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FarmaciaController;
+use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -53,7 +54,14 @@ Route::middleware(['auth.custom'])->group(function () {
             ->middleware('module.access:farmacia')
             ->name('farmacia.medicamentos.destroy');
 
-        Route::view('/laboratorio', 'modules.laboratorio')->middleware('module.access:laboratorio')->name('laboratorio');
+        Route::get('/laboratorio', [LaboratorioController::class, 'index'])->middleware('module.access:laboratorio')->name('laboratorio');
+        Route::post('/laboratorio/examenes', [LaboratorioController::class, 'storeExamen'])->middleware('module.access:laboratorio')->name('laboratorio.examenes.store');
+        Route::put('/laboratorio/examenes/{id}', [LaboratorioController::class, 'updateExamen'])->middleware('module.access:laboratorio')->name('laboratorio.examenes.update');
+        Route::post('/laboratorio/examenes/{id}/toggle', [LaboratorioController::class, 'toggleExamen'])->middleware('module.access:laboratorio')->name('laboratorio.examenes.toggle');
+        Route::delete('/laboratorio/examenes/{id}', [LaboratorioController::class, 'destroyExamen'])->middleware('module.access:laboratorio')->name('laboratorio.examenes.destroy');
+        Route::post('/laboratorio/pacientes', [LaboratorioController::class, 'storePaciente'])->middleware('module.access:laboratorio')->name('laboratorio.pacientes.store');
+        Route::post('/laboratorio/solicitudes/{id}/estado', [LaboratorioController::class, 'updateSolicitudEstado'])->middleware('module.access:laboratorio')->name('laboratorio.solicitudes.estado');
+        Route::post('/laboratorio/solicitudes/estado-general', [LaboratorioController::class, 'updateSolicitudEstadoGeneral'])->middleware('module.access:laboratorio')->name('laboratorio.solicitudes.estado.general');
         Route::view('/reportes', 'modules.reportes')->middleware('module.access:reportes')->name('reportes');
 
         Route::middleware('admin.only')->group(function () {
@@ -67,3 +75,4 @@ Route::middleware(['auth.custom'])->group(function () {
         });
     });
 });
+
