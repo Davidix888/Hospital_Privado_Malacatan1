@@ -3,7 +3,7 @@
 @php
     $labels = [
         'administrador' => 'Administrador',
-        'administracion' => 'Administración',
+        'administracion' => 'Administracion',
         'farmacia' => 'Farmacia',
         'laboratorio' => 'Laboratorio',
         'reportes' => 'Reportes',
@@ -13,7 +13,7 @@
 @section('topbar_actions')
 <form method="POST" action="{{ route('logout') }}">
     @csrf
-    <button class="btn btn-dark" type="submit">Cerrar sesión</button>
+    <button class="btn btn-dark" type="submit">Cerrar sesion</button>
 </form>
 @endsection
 
@@ -35,8 +35,8 @@
 </div>
 
 <div class="quick-strip">
-    <span class="quick-pill">Módulos habilitados: {{ count($modulos) + (($rol === 'administrador' || $rol === 'administracion') ? 1 : 0) }}</span>
-    <span class="quick-pill">Acceso rápido desde este panel</span>
+    <span class="quick-pill">Modulos habilitados: {{ count($modulos) + (($rol === 'administrador' || $rol === 'administracion') ? 1 : 0) }}</span>
+    <span class="quick-pill">Acceso rapido desde este panel</span>
 </div>
 
 <div class="panel-grid {{ ($rol === 'administrador' || $rol === 'administracion') ? 'admin-grid' : '' }}">
@@ -44,7 +44,7 @@
         <div class="card module-card">
             <div>
                 <h3>Usuarios</h3>
-                <p>Alta, edición, activación, desactivación y eliminación de cuentas.</p>
+                <p>Alta, edicion, activacion, desactivacion y eliminacion de cuentas.</p>
             </div>
             <a class="btn" href="{{ route('users.index') }}">Entrar a Usuarios</a>
         </div>
@@ -54,7 +54,7 @@
         <div class="card module-card">
             <div>
                 <h3>Laboratorio</h3>
-                <p>Gestión de pacientes, exámenes y seguimiento de estados.</p>
+                <p>Gestion de pacientes, examenes y seguimiento de estados.</p>
             </div>
             <a class="btn" href="{{ route('laboratorio') }}">Entrar a Laboratorio</a>
         </div>
@@ -74,7 +74,7 @@
         <div class="card module-card">
             <div>
                 <h3>Reportes</h3>
-                <p>Análisis clínico, consumo y actividad por módulo.</p>
+                <p>Analisis clinico, consumo y actividad por modulo.</p>
             </div>
             <a class="btn" href="{{ route('reportes') }}">Ver Reportes</a>
         </div>
@@ -122,4 +122,3 @@
 </style>
 @endpush
 @endsection
-

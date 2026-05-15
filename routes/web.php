@@ -1,10 +1,11 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FarmaciaController;
 use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,7 +63,8 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/laboratorio/pacientes', [LaboratorioController::class, 'storePaciente'])->middleware('module.access:laboratorio')->name('laboratorio.pacientes.store');
         Route::post('/laboratorio/solicitudes/{id}/estado', [LaboratorioController::class, 'updateSolicitudEstado'])->middleware('module.access:laboratorio')->name('laboratorio.solicitudes.estado');
         Route::post('/laboratorio/solicitudes/estado-general', [LaboratorioController::class, 'updateSolicitudEstadoGeneral'])->middleware('module.access:laboratorio')->name('laboratorio.solicitudes.estado.general');
-        Route::view('/reportes', 'modules.reportes')->middleware('module.access:reportes')->name('reportes');
+        Route::get('/reportes', [ReportesController::class, 'index'])->middleware('module.access:reportes')->name('reportes');
+        Route::get('/reportes/export/{modulo}/{formato}', [ReportesController::class, 'export'])->middleware('module.access:reportes')->name('reportes.export');
 
         Route::middleware('admin.only')->group(function () {
             Route::get('/usuarios', [UserManagementController::class, 'index'])->name('users.index');
@@ -75,4 +77,5 @@ Route::middleware(['auth.custom'])->group(function () {
         });
     });
 });
+
 

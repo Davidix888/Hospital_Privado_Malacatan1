@@ -379,5 +379,7 @@
             <div style="margin-top:8px;">&copy; {{ now()->year }} Todos los derechos reservados</div>
         </div>
     </footer>
+    @stack('scripts')
 </body>
 </html>
+

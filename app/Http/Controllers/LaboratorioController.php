@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
 class LaboratorioController extends Controller
@@ -371,6 +372,7 @@ class LaboratorioController extends Controller
 
         DB::transaction(function () use ($payload, $data, $columns): void {
             $idExistente = (int) ($data['id_paciente_existente'] ?? 0);
+            $idUsuarioSesion = (int) Session::get('auth_usuario_id');
 
             if ($idExistente > 0 && DB::table('paciente')->where('id_paciente', $idExistente)->exists()) {
                 DB::table('paciente')->where('id_paciente', $idExistente)->update($payload);
@@ -390,6 +392,7 @@ class LaboratorioController extends Controller
             if (Schema::hasTable('paciente_examen_laboratorio')) {
                 $hasEstado = Schema::hasColumn('paciente_examen_laboratorio', 'estado');
                 $hasCodigoSolicitud = Schema::hasColumn('paciente_examen_laboratorio', 'codigo_solicitud');
+                $hasUsuario = Schema::hasColumn('paciente_examen_laboratorio', 'id_usuario');
                 $codigoSolicitud = null;
                 foreach ($data['examenes'] as $idExamen) {
                     // Cada ingreso genera una nueva solicitud, aunque el paciente
@@ -402,6 +405,9 @@ class LaboratorioController extends Controller
                     ];
                     if ($hasEstado) {
                         $payloadRel['estado'] = 'ingresado';
+                    }
+                    if ($hasUsuario && $idUsuarioSesion > 0) {
+                        $payloadRel['id_usuario'] = $idUsuarioSesion;
                     }
                     if ($hasCodigoSolicitud && $codigoSolicitud !== null) {
                         $payloadRel['codigo_solicitud'] = $codigoSolicitud;
