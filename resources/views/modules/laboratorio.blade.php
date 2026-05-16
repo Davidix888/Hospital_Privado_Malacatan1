@@ -54,6 +54,7 @@
         padding: 8px 10px; font-size: 14px; background: #fff; color: #17365c;
     }
     .form-input:focus { outline: none; border-color: #74aee9; box-shadow: 0 0 0 3px rgba(116, 174, 233, .2); }
+    .field-error { margin-top: 4px; color: #b42318; font-size: 12px; font-weight: 600; }
     .table-wrap { overflow-x: auto; border: 1px solid #d3e0ef; border-radius: 12px; background: #fff; }
     table { width: 100%; border-collapse: collapse; min-width: 940px; }
     th, td { border-bottom: 1px solid #e6edf6; text-align: center; padding: 9px 10px; font-size: 12.5px; vertical-align: middle; }
@@ -159,15 +160,18 @@
                 @csrf
                 <div class="field">
                     <label>Nombre del examen</label>
-                    <input class="form-input" name="nombre_examen" value="{{ old('nombre_examen') }}" required placeholder="Ej: Hemograma completo">
+                    <input class="form-input" name="nombre_examen" value="{{ old('nombre_examen') }}" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios" placeholder="Ej: Hemograma completo">
+                    @error('nombre_examen') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>Costo</label>
                     <input class="form-input" type="number" name="costo" min="0" step="0.01" value="{{ old('costo') }}" required placeholder="Ej: 120.00">
+                    @error('costo') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>Tipo de muestra</label>
                     <input class="form-input" name="tipo_muestra" value="{{ old('tipo_muestra') }}" required placeholder="Ej: Sangre, orina, saliva">
+                    @error('tipo_muestra') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>C&oacute;digo interno</label>
@@ -176,6 +180,7 @@
                 <div class="field">
                     <label>Informaci&oacute;n (opcional)</label>
                     <textarea class="form-input" name="informacion" rows="4" placeholder="Preparaci&oacute;n, observaciones y detalles del examen">{{ old('informacion') }}</textarea>
+                    @error('informacion') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <button class="btn" type="submit" {{ !$hasCatalogTable ? 'disabled' : '' }}>Guardar examen</button>
             </form>
@@ -277,7 +282,7 @@
                                             <div class="edit-grid">
                                                 <div class="field">
                                                     <label>Nombre del examen</label>
-                                                    <input class="form-input" name="nombre_examen" value="{{ $exa->nombre_examen }}" required>
+                                                    <input class="form-input" name="nombre_examen" value="{{ $exa->nombre_examen }}" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios">
                                                 </div>
                                                 <div class="field">
                                                     <label>Costo</label>
@@ -486,27 +491,33 @@
                 <div class="edit-grid">
                 <div class="field">
                     <label>Nombre</label>
-                    <input class="form-input" name="nombre" value="{{ old('nombre') }}" required>
+                    <input class="form-input" name="nombre" value="{{ old('nombre') }}" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios">
+                    @error('nombre') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>Apellido</label>
-                    <input class="form-input" name="apellido" value="{{ old('apellido') }}" required>
+                    <input class="form-input" name="apellido" value="{{ old('apellido') }}" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios">
+                    @error('apellido') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>Tel&eacute;fono</label>
-                    <input class="form-input" name="telefono" value="{{ old('telefono') }}" required placeholder="Ej: 5555-5555">
+                    <input class="form-input" name="telefono" value="{{ old('telefono') }}" required inputmode="numeric" pattern="^\d{8}$" maxlength="8" placeholder="Ej: 12345678">
+                    @error('telefono') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>Correo</label>
-                    <input class="form-input" type="email" name="correo" value="{{ old('correo') }}" placeholder="correo@dominio.com">
+                    <input class="form-input" type="email" name="correo" value="{{ old('correo') }}" required placeholder="correo@dominio.com">
+                    @error('correo') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>NIT</label>
                     <input class="form-input" name="nit" value="{{ old('nit') }}" placeholder="Ej: CF o 1234567-8">
+                    @error('nit') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>DPI</label>
-                    <input class="form-input" name="dpi" value="{{ old('dpi') }}" required placeholder="Ej: 1234 56789 0101">
+                    <input class="form-input" name="dpi" value="{{ old('dpi') }}" required inputmode="numeric" pattern="^\d{13}$" maxlength="13" placeholder="Ej: 1234567890123">
+                    @error('dpi') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <input type="hidden" name="id_paciente_existente" id="id_paciente_existente" value="{{ old('id_paciente_existente') }}">
                 <div class="field">
@@ -517,14 +528,17 @@
                         <option value="Femenino" {{ old('genero') === 'Femenino' ? 'selected' : '' }}>Femenino</option>
                         <option value="Otro" {{ old('genero') === 'Otro' ? 'selected' : '' }}>Otro</option>
                     </select>
+                    @error('genero') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field">
                     <label>Fecha de nacimiento</label>
-                    <input class="form-input" type="date" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}" required>
+                    <input class="form-input" type="date" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}" max="{{ now()->toDateString() }}" required>
+                    @error('fecha_nacimiento') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field full">
                     <label>Direcci&oacute;n</label>
-                    <input class="form-input" name="direccion" value="{{ old('direccion') }}" required placeholder="Direcci&oacute;n completa">
+                    <input class="form-input" name="direccion" value="{{ old('direccion') }}" placeholder="Direcci&oacute;n completa (opcional)">
+                    @error('direccion') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
                 <div class="field full">
                     <label>Ex&aacute;menes solicitados</label>
@@ -814,7 +828,7 @@
                                 <option value="finalizado">Finalizado</option>
                                 <option value="cancelado">Cancelado</option>
                             </select>
-                            <button class="btn btn-sm" type="submit">Guardar examen</button>
+                            <button class="btn btn-sm" type="submit" ${currentState === 'finalizado' ? 'disabled title="Este examen ya está finalizado"' : ''}>Guardar examen</button>
                         </form>
                     `;
                     solMExamenesBody.appendChild(item);

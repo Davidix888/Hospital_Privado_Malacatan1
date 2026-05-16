@@ -29,12 +29,24 @@ class UserManagementController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'nombres' => ['required', 'string', 'max:120'],
-            'apellidos' => ['required', 'string', 'max:120'],
+            'nombres' => ['required', 'string', 'max:120', 'regex:/^(?=.*\pL)[\pL\s\'\.-]+$/u'],
+            'apellidos' => ['required', 'string', 'max:120', 'regex:/^(?=.*\pL)[\pL\s\'\.-]+$/u'],
             'correo' => ['required', 'email', 'max:150', 'unique:usuario,correo'],
             'id_rol' => ['required', 'integer', 'exists:rol,id_rol'],
-            'contrasena' => ['required', 'string', 'min:8'],
+            'contrasena' => ['required', 'string', 'min:6'],
             'activo' => ['nullable', 'boolean'],
+        ], [
+            'nombres.required' => 'Debes ingresar los nombres.',
+            'nombres.regex' => 'Los nombres solo pueden contener letras.',
+            'apellidos.required' => 'Debes ingresar los apellidos.',
+            'apellidos.regex' => 'Los apellidos solo pueden contener letras.',
+            'correo.required' => 'Debes ingresar el correo electrónico.',
+            'correo.email' => 'El correo electrónico no tiene un formato válido.',
+            'correo.unique' => 'El correo electrónico ya está registrado.',
+            'id_rol.required' => 'Debes seleccionar un rol.',
+            'id_rol.exists' => 'El rol seleccionado no es válido.',
+            'contrasena.required' => 'Debes ingresar la contraseña temporal.',
+            'contrasena.min' => 'La contraseña temporal debe tener al menos 6 caracteres.',
         ]);
 
         $usuario = new Usuario();
@@ -61,11 +73,24 @@ class UserManagementController extends Controller
     public function update(Request $request, Usuario $usuario): RedirectResponse
     {
         $data = $request->validate([
-            'nombres' => ['required', 'string', 'max:120'],
-            'apellidos' => ['required', 'string', 'max:120'],
+            'nombres' => ['required', 'string', 'max:120', 'regex:/^(?=.*\pL)[\pL\s\'\.-]+$/u'],
+            'apellidos' => ['required', 'string', 'max:120', 'regex:/^(?=.*\pL)[\pL\s\'\.-]+$/u'],
             'correo' => ['required', 'email', 'max:150', 'unique:usuario,correo,'.$usuario->id_usuario.',id_usuario'],
             'id_rol' => ['required', 'integer', 'exists:rol,id_rol'],
             'activo' => ['nullable', 'boolean'],
+            'nueva_contrasena' => ['nullable', 'string', 'min:6', 'confirmed'],
+        ], [
+            'nombres.required' => 'Debes ingresar los nombres.',
+            'nombres.regex' => 'Los nombres solo pueden contener letras.',
+            'apellidos.required' => 'Debes ingresar los apellidos.',
+            'apellidos.regex' => 'Los apellidos solo pueden contener letras.',
+            'correo.required' => 'Debes ingresar el correo electrónico.',
+            'correo.email' => 'El correo electrónico no tiene un formato válido.',
+            'correo.unique' => 'El correo electrónico ya está registrado.',
+            'id_rol.required' => 'Debes seleccionar un rol.',
+            'id_rol.exists' => 'El rol seleccionado no es válido.',
+            'nueva_contrasena.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
+            'nueva_contrasena.confirmed' => 'La confirmación de contraseña no coincide.',
         ]);
 
         $nameChanged =
@@ -80,6 +105,11 @@ class UserManagementController extends Controller
 
         if ($nameChanged) {
             $usuario->nombre_usuario = Usuario::buildUniqueUsername($data['nombres'], $data['apellidos']);
+        }
+
+        if (!empty($data['nueva_contrasena'])) {
+            $usuario->contrasena = Hash::make($data['nueva_contrasena']);
+            $usuario->password_changed_at = now();
         }
 
         $usuario->save();
@@ -106,4 +136,3 @@ class UserManagementController extends Controller
         return back()->with('status', 'Usuario eliminado correctamente.');
     }
 }
-

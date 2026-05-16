@@ -98,7 +98,7 @@
             border: 0;
             border-radius: 12px;
             color: #fff;
-            background: linear-gradient(90deg, var(--primary), var(--primary-soft));
+            background: var(--primary);
             font-weight: 700;
             font-size: 14px;
             font-family: var(--font-ui);
@@ -162,7 +162,7 @@
             background: rgba(17, 35, 61, .07);
         }
         .main-nav a.active {
-            background: linear-gradient(90deg, var(--primary), var(--primary-soft));
+            background: var(--primary);
             color: #fff;
         }
         .panel-grid {
@@ -268,6 +268,12 @@
         }
         .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: #1f4f86; }
         .form-hint { color: #60738d; font-size: 13px; line-height: 1.45; }
+        .field-error {
+            margin-top: 2px;
+            color: #b91c1c;
+            font-size: 12px;
+            font-weight: 700;
+        }
         .form-actions {
             display: flex;
             gap: 10px;

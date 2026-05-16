@@ -23,15 +23,18 @@
         @csrf
         <div class="form-field">
             <label class="form-label">Nombres</label>
-            <input class="form-control" name="nombres" value="{{ old('nombres') }}" required>
+            <input class="form-control" name="nombres" value="{{ old('nombres') }}" required pattern="^(?=.*[A-Za-zÁÉÍÓÚáéíóúÑñÜü])[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios">
+            @error('nombres') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <div class="form-field">
             <label class="form-label">Apellidos</label>
-            <input class="form-control" name="apellidos" value="{{ old('apellidos') }}" required>
+            <input class="form-control" name="apellidos" value="{{ old('apellidos') }}" required pattern="^(?=.*[A-Za-zÁÉÍÓÚáéíóúÑñÜü])[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios">
+            @error('apellidos') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <div class="form-field">
             <label class="form-label">Correo electrónico</label>
             <input class="form-control" type="email" name="correo" value="{{ old('correo') }}" required>
+            @error('correo') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <div class="form-field">
             <label class="form-label">Rol</label>
@@ -47,17 +50,19 @@
                     </option>
                 @endforeach
             </select>
+            @error('id_rol') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <div class="form-field">
             <label class="form-label">Contraseña temporal</label>
             <input class="form-control" type="password" name="contrasena" required>
+            @error('contrasena') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <label class="checkbox-row">
             <input type="checkbox" name="activo" value="1" checked>
             <span>Usuario activo</span>
         </label>
 
-        <small class="form-hint">El nombre de usuario se genera automáticamente con inicial del primer nombre + inicial del segundo nombre + apellido. Ej: ldixquiac, ldixquiac2...</small>
+        <small class="form-hint">El nombre de usuario se genera automáticamente con iniciales + apellido. Si se repite, se agregan más letras del primer nombre hasta que sea único.</small>
 
         <div class="form-actions">
             <button class="btn" type="submit">Guardar usuario</button>
@@ -66,4 +71,3 @@
     </form>
 </div>
 @endsection
-

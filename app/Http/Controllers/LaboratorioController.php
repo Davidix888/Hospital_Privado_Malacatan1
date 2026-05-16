@@ -195,7 +195,7 @@ class LaboratorioController extends Controller
         $hasTipoMuestra = Schema::hasColumn('examen_laboratorio', 'tipo_muestra');
 
         $data = $request->validate([
-            'nombre_examen' => ['required', 'string', 'max:180', 'unique:examen_laboratorio,nombre_examen'],
+            'nombre_examen' => ['required', 'string', 'max:180', 'regex:/^[\pL\s\'\.-]+$/u', 'unique:examen_laboratorio,nombre_examen'],
             'costo' => ['required', 'numeric', 'min:0'],
             'tipo_muestra' => ['required', 'string', 'max:120'],
             'informacion' => ['nullable', 'string', 'max:1200'],
@@ -238,7 +238,7 @@ class LaboratorioController extends Controller
         }
 
         $data = $request->validate([
-            'nombre_examen' => ['required', 'string', 'max:180', 'unique:examen_laboratorio,nombre_examen,'.$id.',id_examen'],
+            'nombre_examen' => ['required', 'string', 'max:180', 'regex:/^[\pL\s\'\.-]+$/u', 'unique:examen_laboratorio,nombre_examen,'.$id.',id_examen'],
             'costo' => ['required', 'numeric', 'min:0'],
             'tipo_muestra' => ['required', 'string', 'max:120'],
             'informacion' => ['nullable', 'string', 'max:1200'],
@@ -294,15 +294,15 @@ class LaboratorioController extends Controller
 
         $data = $request->validate([
             'id_paciente_existente' => ['nullable', 'integer'],
-            'nombre' => ['required', 'string', 'max:120'],
-            'apellido' => ['required', 'string', 'max:120'],
-            'telefono' => ['required', 'string', 'max:30'],
-            'correo' => ['nullable', 'email', 'max:120'],
-            'direccion' => ['required', 'string', 'max:255'],
+            'nombre' => ['required', 'string', 'max:120', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'apellido' => ['required', 'string', 'max:120', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'telefono' => ['required', 'regex:/^\d{8}$/'],
+            'correo' => ['required', 'email', 'max:120'],
+            'direccion' => ['nullable', 'string', 'max:255'],
             'nit' => ['nullable', 'string', 'max:30'],
-            'dpi' => ['required', 'string', 'max:30'],
+            'dpi' => ['required', 'regex:/^\d{13}$/'],
             'genero' => ['required', 'string', 'max:20'],
-            'fecha_nacimiento' => ['required', 'date'],
+            'fecha_nacimiento' => ['required', 'date', 'before_or_equal:today'],
             'examenes' => ['required', 'array', 'min:1'],
             'examenes.*' => ['required', 'integer', 'distinct', 'exists:examen_laboratorio,id_examen'],
             'confirmar_duplicado' => ['nullable', 'boolean'],
@@ -364,6 +364,10 @@ class LaboratorioController extends Controller
                     $payload[$col] = is_string($value) ? trim($value) : $value;
                 }
             }
+        }
+
+        if (in_array('nit', $columns, true) && empty(trim((string) ($payload['nit'] ?? '')))) {
+            $payload['nit'] = 'CF';
         }
 
         if (empty($payload)) {
@@ -579,6 +583,11 @@ class LaboratorioController extends Controller
             'unique' => 'Ya existe un examen con ese :attribute.',
             'email' => 'El campo :attribute debe ser un correo valido.',
             'date' => 'El campo :attribute debe tener una fecha valida.',
+            'before_or_equal' => 'El campo :attribute no puede ser una fecha futura.',
+            'regex' => 'El campo :attribute solo puede contener letras.',
+            'nombre_examen.regex' => 'El nombre del examen no puede contener numeros.',
+            'telefono.regex' => 'El telefono debe tener exactamente 8 digitos.',
+            'dpi.regex' => 'El DPI debe tener exactamente 13 digitos.',
             'in' => 'El campo :attribute seleccionado no es valido.',
         ];
     }
