@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // In production we avoid executing legacy SQL dumps from this migration.
+        // The dump can contain encoding/meta-command artifacts that break deploys.
+        if (app()->environment('production')) {
+            return;
+        }
+
         if (Schema::hasTable('usuario')) {
             return;
         }
