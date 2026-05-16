@@ -27,7 +27,7 @@ class PasswordController extends Controller
     {
         $data = $request->validate([
             'correo' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
         $usuarioId = Session::get('auth_usuario_id');
@@ -41,7 +41,7 @@ class PasswordController extends Controller
         $usuario->password_changed_at = Carbon::now();
         $usuario->save();
 
-        return redirect()->route('dashboard')->with('status', 'Contraseña actualizada correctamente.');
+        return redirect()->route('dashboard')->with('status', 'ContraseÃ±a actualizada correctamente.');
     }
 
     public function showForgotForm(): View
@@ -71,11 +71,11 @@ class PasswordController extends Controller
 
         $resetUrl = route('password.reset.form', ['token' => $plainToken, 'email' => $correo]);
 
-        Mail::raw("Hola {$usuario->nombres},\n\nPara cambiar tu contraseña ingresa al siguiente enlace:\n{$resetUrl}\n\nSi no solicitaste este cambio, ignora este correo.", function ($message) use ($correo) {
-            $message->to($correo)->subject('Cambio de contraseña - Hospital Privado Malacatán');
+        Mail::raw("Hola {$usuario->nombres},\n\nPara cambiar tu contraseÃ±a ingresa al siguiente enlace:\n{$resetUrl}\n\nSi no solicitaste este cambio, ignora este correo.", function ($message) use ($correo) {
+            $message->to($correo)->subject('Cambio de contraseÃ±a - Hospital Privado MalacatÃ¡n');
         });
 
-        return back()->with('status', 'Te enviamos un correo con el enlace para cambiar tu contraseña.');
+        return back()->with('status', 'Te enviamos un correo con el enlace para cambiar tu contraseÃ±a.');
     }
 
     public function showResetForm(Request $request, string $token): View
@@ -91,18 +91,18 @@ class PasswordController extends Controller
         $data = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);
 
         $email = mb_strtolower(trim($data['email']));
         $record = DB::table('password_reset_tokens')->where('email', $email)->first();
 
         if (!$record || !Hash::check($data['token'], $record->token)) {
-            return back()->withErrors(['email' => 'El enlace no es válido o expiró.'])->withInput();
+            return back()->withErrors(['email' => 'El enlace no es vÃ¡lido o expirÃ³.'])->withInput();
         }
 
         if (Carbon::parse($record->created_at)->addMinutes(60)->isPast()) {
-            return back()->withErrors(['email' => 'El enlace ya expiró. Solicita uno nuevo.'])->withInput();
+            return back()->withErrors(['email' => 'El enlace ya expirÃ³. Solicita uno nuevo.'])->withInput();
         }
 
         $usuario = Usuario::where('correo', $email)->first();
@@ -117,6 +117,6 @@ class PasswordController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $email)->delete();
 
-        return redirect()->route('login')->with('status', 'Contraseña restablecida correctamente.');
+        return redirect()->route('login')->with('status', 'ContraseÃ±a restablecida correctamente.');
     }
 }

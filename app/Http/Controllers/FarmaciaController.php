@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
@@ -68,7 +69,18 @@ class FarmaciaController extends Controller
             ->get();
 
         $pacientes = DB::table('paciente')
-            ->select('id_paciente', 'nombre', 'apellido')
+            ->select(
+                'id_paciente',
+                'nombre',
+                'apellido',
+                'telefono',
+                'direccion',
+                'correo',
+                'fecha_nacimiento',
+                'nit',
+                'genero',
+                'dpi'
+            )
             ->orderBy('nombre')
             ->orderBy('apellido')
             ->limit(200)
@@ -130,6 +142,42 @@ class FarmaciaController extends Controller
             ->filter(fn ($row) => $row->cantidad_disponible > 0)
             ->values();
 
+        $devCompras = collect();
+        if (Schema::hasTable('devolucion_compra') && Schema::hasTable('detalle_devolucion_compra')) {
+            $devCompras = DB::table('detalle_devolucion_compra as ddc')
+                ->join('devolucion_compra as dc', 'dc.id_devolucion_compra', '=', 'ddc.id_devolucion_compra')
+                ->select('dc.id_compra_abastecimiento', 'ddc.id_lote', DB::raw('SUM(ddc.cantidad) as cantidad_devuelta'))
+                ->groupBy('dc.id_compra_abastecimiento', 'ddc.id_lote')
+                ->get()
+                ->keyBy(fn ($row) => $row->id_compra_abastecimiento.'|'.$row->id_lote);
+        }
+
+        $comprasParaDevolver = DB::table('detalle_compra as dc')
+            ->join('compra_abastecimiento as c', 'c.id_compra_abastecimiento', '=', 'dc.id_compra_abastecimiento')
+            ->join('lote as l', 'l.id_lote', '=', 'dc.id_lote')
+            ->join('medicamento as m', 'm.id_medicamento', '=', 'l.id_medicamento')
+            ->leftJoin('proveedor as p', 'p.id_proveedor', '=', 'c.id_proveedor')
+            ->select(
+                'c.id_compra_abastecimiento',
+                'c.fecha',
+                'dc.id_lote',
+                'm.nombre as medicamento',
+                'dc.cantidad as cantidad_comprada',
+                'p.nombre_empresa as proveedor_nombre'
+            )
+            ->orderByDesc('c.id_compra_abastecimiento')
+            ->limit(500)
+            ->get()
+            ->map(function ($row) use ($devCompras) {
+                $key = $row->id_compra_abastecimiento.'|'.$row->id_lote;
+                $devuelto = (int) ($devCompras[$key]->cantidad_devuelta ?? 0);
+                $row->cantidad_devuelta = $devuelto;
+                $row->cantidad_disponible = max(0, (int) $row->cantidad_comprada - $devuelto);
+                return $row;
+            })
+            ->filter(fn ($row) => $row->cantidad_disponible > 0)
+            ->values();
+
         return view('modules.farmacia', [
             'medicamentos' => $medicamentos,
             'categorias' => $categorias,
@@ -139,18 +187,19 @@ class FarmaciaController extends Controller
             'inventario' => $inventario,
             'lotesActivos' => $lotesActivos,
             'ventasParaDevolver' => $ventasParaDevolver,
+            'comprasParaDevolver' => $comprasParaDevolver,
         ]);
     }
 
     public function storeMedicamento(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'nombre' => ['required', 'string', 'max:180'],
-            'id_categoria' => ['nullable'],
-            'nueva_categoria' => ['nullable', 'string', 'max:120'],
-            'presentacion' => ['nullable', 'string', 'max:100'],
-            'concentracion' => ['nullable', 'string', 'max:100'],
-            'via_administracion' => ['nullable', 'string', 'max:80'],
+            'nombre' => ['required', 'string', 'max:180', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'id_categoria' => ['required'],
+            'nueva_categoria' => ['nullable', 'string', 'max:120', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'presentacion' => ['required', 'string', 'max:100', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'concentracion' => ['required', 'string', 'max:100'],
+            'via_administracion' => ['required', 'string', 'max:80', 'regex:/^[\pL\s\'\.-]+$/u'],
             'descripcion' => ['nullable', 'string', 'max:400'],
         ], $this->validationMessages(), $this->validationAttributes());
 
@@ -177,6 +226,10 @@ class FarmaciaController extends Controller
                 }
             } elseif (!empty($data['id_categoria'])) {
                 $idCategoria = (int) $data['id_categoria'];
+            } else {
+                throw ValidationException::withMessages([
+                    'id_categoria' => 'Debes seleccionar una categoría.',
+                ]);
             }
 
             $payloadMedicamento = [
@@ -194,7 +247,6 @@ class FarmaciaController extends Controller
             }
 
             $idMedicamento = DB::table('medicamento')->insertGetId($payloadMedicamento, 'id_medicamento');
-
             DB::table('medicamento')
                 ->where('id_medicamento', $idMedicamento)
                 ->update([
@@ -209,12 +261,12 @@ class FarmaciaController extends Controller
     public function updateMedicamento(Request $request, int $id): RedirectResponse
     {
         $data = $request->validate([
-            'nombre' => ['required', 'string', 'max:180'],
-            'id_categoria' => ['nullable'],
-            'nueva_categoria' => ['nullable', 'string', 'max:120'],
-            'presentacion' => ['nullable', 'string', 'max:100'],
-            'concentracion' => ['nullable', 'string', 'max:100'],
-            'via_administracion' => ['nullable', 'string', 'max:80'],
+            'nombre' => ['required', 'string', 'max:180', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'id_categoria' => ['required'],
+            'nueva_categoria' => ['nullable', 'string', 'max:120', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'presentacion' => ['required', 'string', 'max:100', 'regex:/^[\pL\s\'\.-]+$/u'],
+            'concentracion' => ['required', 'string', 'max:100'],
+            'via_administracion' => ['required', 'string', 'max:80', 'regex:/^[\pL\s\'\.-]+$/u'],
             'descripcion' => ['nullable', 'string', 'max:400'],
         ], $this->validationMessages(), $this->validationAttributes());
 
@@ -242,6 +294,10 @@ class FarmaciaController extends Controller
                     : DB::table('categoria_medicamento')->insertGetId(['nombre_categoria' => $categoriaNombre], 'id_categoria');
             } elseif (!empty($data['id_categoria'])) {
                 $idCategoria = (int) $data['id_categoria'];
+            } else {
+                throw ValidationException::withMessages([
+                    'id_categoria' => 'Debes seleccionar una categoría.',
+                ]);
             }
 
             DB::table('medicamento')
@@ -297,20 +353,22 @@ class FarmaciaController extends Controller
             ->with('active_section', 'sec-catalogo');
     }
 
+
     public function storeCompra(Request $request): RedirectResponse
     {
+        $hoyGt = Carbon::now(config('app.timezone'))->toDateString();
         $data = $request->validate([
-            'id_proveedor' => ['nullable'],
+            'id_proveedor' => ['required'],
             'nuevo_proveedor_nombre' => ['nullable', 'string', 'max:160'],
             'nuevo_proveedor_telefono' => ['nullable', 'string', 'max:50'],
             'nuevo_proveedor_correo' => ['nullable', 'email', 'max:150'],
-            'fecha' => ['required', 'date'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.$hoyGt],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id_medicamento' => ['required', 'integer', 'exists:medicamento,id_medicamento'],
             'items.*.fecha_vencimiento' => ['required', 'date', 'after_or_equal:fecha'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
-            'items.*.precio_compra' => ['required', 'numeric', 'min:0'],
-            'items.*.precio_venta' => ['required', 'numeric', 'min:0'],
+            'items.*.precio_compra' => ['required', 'numeric', 'gt:0'],
+            'items.*.precio_venta' => ['required', 'numeric', 'gt:0'],
         ], $this->validationMessages(), $this->validationAttributes());
 
         $data['items'] = $this->mergeCompraItems($data['items']);
@@ -321,6 +379,11 @@ class FarmaciaController extends Controller
         }
 
         $idUsuario = (int) Session::get('auth_usuario_id');
+        if ($idUsuario <= 0) {
+            throw ValidationException::withMessages([
+                'items' => 'No se pudo identificar el usuario autenticado para registrar la compra.',
+            ]);
+        }
 
         DB::transaction(function () use ($data, $idUsuario): void {
             $idProveedor = null;
@@ -376,18 +439,20 @@ class FarmaciaController extends Controller
 
     public function storeVenta(Request $request): RedirectResponse
     {
+        $hoyGt = Carbon::now(config('app.timezone'))->toDateString();
         $data = $request->validate([
             'id_paciente' => ['nullable'],
+            'consumidor_final' => ['nullable', 'boolean'],
             'nuevo_paciente_nombre' => ['nullable', 'string', 'max:120'],
             'nuevo_paciente_apellido' => ['nullable', 'string', 'max:120'],
             'nuevo_paciente_telefono' => ['nullable', 'string', 'max:50'],
             'nuevo_paciente_direccion' => ['nullable', 'string', 'max:220'],
             'nuevo_paciente_correo' => ['nullable', 'email', 'max:150'],
             'nuevo_paciente_fecha_nacimiento' => ['nullable', 'date'],
-            'nuevo_paciente_nit' => ['required_if:id_paciente,__nuevo__', 'string', 'max:30'],
+            'nuevo_paciente_nit' => ['nullable', 'string', 'max:30', 'regex:/^(CF|C\/F|[0-9]+(?:-[0-9K])?)$/i'],
             'nuevo_paciente_genero' => ['nullable', 'string', 'max:20'],
             'nuevo_paciente_dpi' => ['nullable', 'string', 'max:30'],
-            'fecha' => ['required', 'date'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.$hoyGt],
             'items' => ['required', 'array', 'min:1'],
             'items.*.id_medicamento' => ['required', 'integer', 'exists:medicamento,id_medicamento'],
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
@@ -396,32 +461,94 @@ class FarmaciaController extends Controller
         $data['items'] = $this->mergeVentaItems($data['items']);
         if (count($data['items']) === 0) {
             throw ValidationException::withMessages([
-                'items' => 'Debes ingresar al menos una línea válida para registrar la venta.',
+                'items' => 'Debes seleccionar al menos un medicamento con cantidad mayor a 0 para registrar la venta.',
             ]);
         }
 
         $idUsuario = (int) Session::get('auth_usuario_id');
+        if ($idUsuario <= 0) {
+            throw ValidationException::withMessages([
+                'items' => 'No se pudo identificar el usuario autenticado para registrar la venta.',
+            ]);
+        }
 
         DB::transaction(function () use ($data, $idUsuario): void {
             $idPaciente = null;
-            if (($data['id_paciente'] ?? null) === '__nuevo__') {
+            $esConsumidorFinal = (bool) ($data['consumidor_final'] ?? false);
+            if ($esConsumidorFinal) {
+                $idPaciente = null;
+            } elseif (!empty($data['id_paciente']) && (string) $data['id_paciente'] !== '__nuevo__') {
+                $idPaciente = (int) $data['id_paciente'];
+                $exists = DB::table('paciente')->where('id_paciente', $idPaciente)->exists();
+                if (!$exists) {
+                    throw ValidationException::withMessages([
+                        'id_paciente' => 'El paciente seleccionado no existe.',
+                    ]);
+                }
+            } else {
+                $nitLimpio = strtoupper(trim((string) ($data['nuevo_paciente_nit'] ?? '')));
+                $nitLimpio = str_replace([' ', '.', '_'], '', $nitLimpio);
+                if ($nitLimpio === 'C/F') {
+                    $nitLimpio = 'CF';
+                }
+                $dpiLimpio = preg_replace('/\s+/', '', trim((string) ($data['nuevo_paciente_dpi'] ?? '')));
                 $nombre = trim((string) ($data['nuevo_paciente_nombre'] ?? ''));
                 $apellido = trim((string) ($data['nuevo_paciente_apellido'] ?? ''));
-                if ($nombre === '' || $apellido === '') {
+
+                if ($nitLimpio === 'CF') {
+                    $idPaciente = null;
+                } else {
+                    if ($nitLimpio !== '') {
+                        $pacienteNit = DB::table('paciente')
+                            ->whereRaw('UPPER(REPLACE(REPLACE(REPLACE(COALESCE(nit, \'\'), \' \', \'\'), \'.\', \'\'), \'_\', \'\')) = ?', [$nitLimpio])
+                            ->value('id_paciente');
+                        if (!empty($pacienteNit)) {
+                            $idPaciente = (int) $pacienteNit;
+                        }
+                    }
+
+                    if ($idPaciente === null && $dpiLimpio !== '') {
+                        $pacienteDpi = DB::table('paciente')
+                            ->whereRaw('REPLACE(COALESCE(dpi, \'\'), \' \', \'\') = ?', [$dpiLimpio])
+                            ->value('id_paciente');
+                        if (!empty($pacienteDpi)) {
+                            $idPaciente = (int) $pacienteDpi;
+                        }
+                    }
+                }
+
+                if ($idPaciente === null && $nitLimpio !== 'CF' && $nombre === '' && $apellido === '' && $nitLimpio === '' && $dpiLimpio === '') {
                     throw ValidationException::withMessages([
-                        'nuevo_paciente_nombre' => 'Debes ingresar nombre y apellido del paciente nuevo.',
+                        'consumidor_final' => 'Marca Consumidor final o ingresa/selecciona datos del paciente.',
                     ]);
                 }
 
-                $idPaciente = DB::table('paciente')->insertGetId([
-                    'nombre' => $nombre,
-                    'apellido' => $apellido,
-                    'telefono' => trim((string) ($data['nuevo_paciente_telefono'] ?? '')) ?: null,
-                    'direccion' => trim((string) ($data['nuevo_paciente_direccion'] ?? '')) ?: null,
-                    'correo' => trim((string) ($data['nuevo_paciente_correo'] ?? '')) ?: null,
-                ], 'id_paciente');
-            } elseif (!empty($data['id_paciente'])) {
-                $idPaciente = (int) $data['id_paciente'];
+                if ($idPaciente === null && $nitLimpio !== 'CF') {
+                    if ($nombre === '' || $apellido === '') {
+                        throw ValidationException::withMessages([
+                            'nuevo_paciente_nombre' => 'Debes ingresar nombre y apellido del paciente nuevo.',
+                        ]);
+                    }
+                    if ($nitLimpio === '') {
+                        throw ValidationException::withMessages([
+                            'nuevo_paciente_nit' => 'Debes ingresar NIT del paciente o marca Consumidor final.',
+                        ]);
+                    }
+
+                    $idPaciente = DB::table('paciente')->insertGetId([
+                        'nombre' => $nombre,
+                        'apellido' => $apellido,
+                        'telefono' => trim((string) ($data['nuevo_paciente_telefono'] ?? '')) ?: null,
+                        'direccion' => trim((string) ($data['nuevo_paciente_direccion'] ?? '')) ?: null,
+                        'correo' => trim((string) ($data['nuevo_paciente_correo'] ?? '')) ?: null,
+                        'fecha_nacimiento' => $data['nuevo_paciente_fecha_nacimiento'] ?? null,
+                        'nit' => $nitLimpio !== '' ? $nitLimpio : null,
+                        'genero' => trim((string) ($data['nuevo_paciente_genero'] ?? '')) ?: null,
+                        'dpi' => trim((string) ($data['nuevo_paciente_dpi'] ?? '')) ?: null,
+                    ], 'id_paciente');
+                }
+            }
+            if ($idPaciente !== null) {
                 $exists = DB::table('paciente')->where('id_paciente', $idPaciente)->exists();
                 if (!$exists) {
                     throw ValidationException::withMessages([
@@ -460,7 +587,7 @@ class FarmaciaController extends Controller
 
                     if ($stockDisponible <= 0) {
                         throw ValidationException::withMessages([
-                            "items.$idx.cantidad" => 'No hay stock disponible para '.$nombreMed.'.',
+                            "items.$idx.id_medicamento" => 'No hay stock disponible para '.$nombreMed.'.',
                         ]);
                     }
 
@@ -477,12 +604,20 @@ class FarmaciaController extends Controller
                     }
 
                     $consumir = min($restante, (int) $lote->stock);
-                    $nuevoStock = (int) $lote->stock - $consumir;
                     $precioVenta = (float) ($lote->precio_venta ?? 0);
 
-                    DB::table('lote')
+                    $updated = DB::table('lote')
                         ->where('id_lote', $lote->id_lote)
-                        ->update(['stock' => $nuevoStock]);
+                        ->where('stock', '>=', $consumir)
+                        ->update([
+                            'stock' => DB::raw('stock - '.(int) $consumir),
+                        ]);
+
+                    if ($updated === 0) {
+                        throw ValidationException::withMessages([
+                            "items.$idx.cantidad" => 'El stock cambió mientras se registraba la venta. Intenta nuevamente.',
+                        ]);
+                    }
 
                     DB::table('detalle_venta')->insert([
                         'id_venta' => $idVenta,
@@ -493,20 +628,27 @@ class FarmaciaController extends Controller
 
                     $restante -= $consumir;
                 }
+
+                if ($restante > 0) {
+                    throw ValidationException::withMessages([
+                        "items.$idx.cantidad" => 'No se pudo completar la venta por stock insuficiente.',
+                    ]);
+                }
             }
         });
 
-        return back()->with('status', 'Venta registrada con múltiples medicamentos y stock descontado por lote (FEFO).')
+        return back()->with('status', 'Venta registrada con múltiples medicamentos y stock descontado por lote.')
             ->with('active_section', 'sec-ventas');
     }
 
     public function storeDevolucion(Request $request): RedirectResponse
     {
+        $hoyGt = Carbon::now(config('app.timezone'))->toDateString();
         $data = $request->validate([
             'id_venta' => ['required', 'integer', 'exists:venta_farmacia,id_venta'],
             'id_lote' => ['required', 'integer', 'exists:lote,id_lote'],
             'cantidad' => ['required', 'integer', 'min:1'],
-            'fecha' => ['required', 'date'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.$hoyGt],
             'motivo' => ['nullable', 'string', 'max:180'],
             'reingresable' => ['nullable', 'boolean'],
         ], $this->validationMessages(), $this->validationAttributes());
@@ -567,6 +709,80 @@ class FarmaciaController extends Controller
             ->with('active_section', 'sec-devoluciones');
     }
 
+    public function storeDevolucionCompra(Request $request): RedirectResponse
+    {
+        if (!Schema::hasTable('devolucion_compra') || !Schema::hasTable('detalle_devolucion_compra')) {
+            return back()->withErrors([
+                'devolucion_compra' => 'Faltan tablas para devoluciones de compras. Ejecuta las migraciones.',
+            ])->with('active_section', 'sec-devoluciones-compras');
+        }
+
+        $hoyGt = Carbon::now(config('app.timezone'))->toDateString();
+        $data = $request->validate([
+            'id_compra_abastecimiento' => ['required', 'integer', 'exists:compra_abastecimiento,id_compra_abastecimiento'],
+            'id_lote' => ['required', 'integer', 'exists:lote,id_lote'],
+            'cantidad' => ['required', 'integer', 'min:1'],
+            'fecha' => ['required', 'date', 'before_or_equal:'.$hoyGt],
+            'motivo' => ['nullable', 'string', 'max:180'],
+        ], $this->validationMessages(), $this->validationAttributes());
+
+        DB::transaction(function () use ($data): void {
+            $cantidadComprada = (int) DB::table('detalle_compra')
+                ->where('id_compra_abastecimiento', (int) $data['id_compra_abastecimiento'])
+                ->where('id_lote', (int) $data['id_lote'])
+                ->sum('cantidad');
+
+            if ($cantidadComprada <= 0) {
+                throw ValidationException::withMessages([
+                    'id_lote' => 'Ese lote no pertenece a la compra seleccionada.',
+                ]);
+            }
+
+            $cantidadDevuelta = (int) DB::table('detalle_devolucion_compra as ddc')
+                ->join('devolucion_compra as dc', 'dc.id_devolucion_compra', '=', 'ddc.id_devolucion_compra')
+                ->where('dc.id_compra_abastecimiento', (int) $data['id_compra_abastecimiento'])
+                ->where('ddc.id_lote', (int) $data['id_lote'])
+                ->sum('ddc.cantidad');
+
+            $disponible = $cantidadComprada - $cantidadDevuelta;
+            if ((int) $data['cantidad'] > $disponible) {
+                throw ValidationException::withMessages([
+                    'cantidad' => 'No puedes devolver más de lo disponible. Disponible: '.$disponible,
+                ]);
+            }
+
+            $updated = DB::table('lote')
+                ->where('id_lote', (int) $data['id_lote'])
+                ->where('stock', '>=', (int) $data['cantidad'])
+                ->update([
+                    'stock' => DB::raw('stock - '.(int) $data['cantidad']),
+                ]);
+
+            if ($updated === 0) {
+                throw ValidationException::withMessages([
+                    'cantidad' => 'No hay stock suficiente para descontar esta devolución de compra.',
+                ]);
+            }
+
+            $idDevolucionCompra = DB::table('devolucion_compra')->insertGetId([
+                'fecha' => $data['fecha'],
+                'motivo' => trim((string) ($data['motivo'] ?? '')) ?: null,
+                'id_compra_abastecimiento' => (int) $data['id_compra_abastecimiento'],
+            ], 'id_devolucion_compra');
+
+            DB::table('detalle_devolucion_compra')->insert([
+                'id_devolucion_compra' => $idDevolucionCompra,
+                'id_lote' => (int) $data['id_lote'],
+                'cantidad' => (int) $data['cantidad'],
+            ]);
+        });
+
+        $mensaje = 'Devolución de compra registrada y stock descontado del lote.';
+
+        return back()->with('status', $mensaje)
+            ->with('active_section', 'sec-devoluciones-compras');
+    }
+
     private function validationMessages(): array
     {
         return [
@@ -579,9 +795,13 @@ class FarmaciaController extends Controller
             'date' => 'El campo :attribute debe ser una fecha válida.',
             'exists' => 'El valor seleccionado en :attribute no existe.',
             'after_or_equal' => 'El campo :attribute debe ser una fecha igual o posterior a :date.',
+            'before_or_equal' => 'El campo :attribute no puede ser una fecha futura.',
             'min' => 'El campo :attribute debe ser como mínimo :min.',
+            'gt' => 'El campo :attribute debe ser mayor que :value.',
             'max' => 'El campo :attribute no puede exceder :max caracteres.',
             'array' => 'El campo :attribute debe ser una lista válida.',
+            'regex' => 'El campo :attribute solo puede contener letras.',
+            'nuevo_paciente_nit.regex' => 'El NIT no es válido. Puedes usar CF o un NIT con formato 1234567-8.',
         ];
     }
 
@@ -591,7 +811,9 @@ class FarmaciaController extends Controller
             'id_medicamento' => 'medicamento',
             'id_proveedor' => 'proveedor',
             'id_paciente' => 'paciente',
+            'consumidor_final' => 'consumidor final',
             'id_venta' => 'venta',
+            'id_compra_abastecimiento' => 'compra',
             'id_lote' => 'lote',
             'fecha' => 'fecha',
             'fecha_vencimiento' => 'fecha de vencimiento',
@@ -602,7 +824,9 @@ class FarmaciaController extends Controller
             'presentacion' => 'presentación',
             'concentracion' => 'concentración',
             'via_administracion' => 'vía de administración',
+            'codigo_interno' => 'código interno',
             'descripcion' => 'descripción',
+            'id_categoria' => 'categoría',
             'nueva_categoria' => 'categoría nueva',
             'nuevo_proveedor_nombre' => 'nombre del proveedor',
             'nuevo_proveedor_telefono' => 'teléfono del proveedor',

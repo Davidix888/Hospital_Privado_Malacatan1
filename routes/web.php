@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FarmaciaController;
 use App\Http\Controllers\LaboratorioController;
-use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,21 +12,11 @@ Route::redirect('/', '/login');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-
-    Route::get('/forgot-password', [PasswordController::class, 'showForgotForm'])->name('password.request');
-    Route::post('/forgot-password', [PasswordController::class, 'sendResetLink'])->name('password.email');
-    Route::get('/reset-password/{token}', [PasswordController::class, 'showResetForm'])->name('password.reset.form');
-    Route::post('/reset-password', [PasswordController::class, 'resetWithToken'])->name('password.reset.update');
 });
 
 Route::middleware(['auth.custom'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-    Route::get('/password/force-change', [PasswordController::class, 'showForceChange'])->name('password.force');
-    Route::post('/password/force-change', [PasswordController::class, 'update'])->name('password.update');
-
-    Route::middleware(['password.fresh'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/farmacia', [FarmaciaController::class, 'index'])
             ->middleware('module.access:farmacia')
@@ -41,6 +30,9 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/farmacia/devoluciones', [FarmaciaController::class, 'storeDevolucion'])
             ->middleware('module.access:farmacia')
             ->name('farmacia.devoluciones.store');
+        Route::post('/farmacia/devoluciones-compras', [FarmaciaController::class, 'storeDevolucionCompra'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.devoluciones_compras.store');
         Route::post('/farmacia/medicamentos', [FarmaciaController::class, 'storeMedicamento'])
             ->middleware('module.access:farmacia')
             ->name('farmacia.medicamentos.store');
@@ -73,6 +65,4 @@ Route::middleware(['auth.custom'])->group(function () {
             Route::post('/usuarios/{usuario}/toggle', [UserManagementController::class, 'toggle'])->name('users.toggle');
             Route::delete('/usuarios/{usuario}', [UserManagementController::class, 'destroy'])->name('users.destroy');
         });
-    });
 });
-
