@@ -71,15 +71,9 @@
         letter-spacing: .2px;
         box-shadow: none;
     }
-    .btn-edit {
-        background: linear-gradient(90deg, #1c3f6c, #27548c);
-    }
-    .btn-toggle {
-        background: linear-gradient(90deg, #16375d, #214a7a);
-    }
-    .btn-delete {
-        background: linear-gradient(90deg, #7d1f1f, #982828);
-    }
+    .btn-edit { background: #1c3f6c; }
+    .btn-toggle { background: #16375d; }
+    .btn-delete { background: #7d1f1f; }
 
     @media (max-width: 900px) {
         .users-header {
@@ -206,4 +200,3 @@
     </div>
 </div>
 @endsection
-

@@ -9,12 +9,17 @@ use Tests\TestCase;
 
 class FarmaciaModuleTest extends TestCase
 {
+    private int $categoriaId;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->withoutMiddleware();
         $this->buildSchema();
+        $this->categoriaId = (int) DB::table('categoria_medicamento')->insertGetId([
+            'nombre_categoria' => 'Analgésicos',
+        ], 'id_categoria');
     }
 
     private function buildSchema(): void
@@ -54,6 +59,7 @@ class FarmaciaModuleTest extends TestCase
     {
         $response = $this->post(route('farmacia.medicamentos.store'), [
             'nombre' => 'Paracetamol',
+            'id_categoria' => $this->categoriaId,
             'presentacion' => 'Tableta',
             'concentracion' => '500 mg',
             'via_administracion' => 'Oral',
@@ -74,6 +80,7 @@ class FarmaciaModuleTest extends TestCase
     {
         $id = DB::table('medicamento')->insertGetId([
             'nombre' => 'Ibuprofeno',
+            'id_categoria' => $this->categoriaId,
             'presentacion' => 'Tableta',
             'concentracion' => '400 mg',
             'via_administracion' => 'Oral',
@@ -83,6 +90,7 @@ class FarmaciaModuleTest extends TestCase
 
         $response = $this->put(route('farmacia.medicamentos.update', $id), [
             'nombre' => 'Ibuprofeno Forte',
+            'id_categoria' => $this->categoriaId,
             'presentacion' => 'Cápsula',
             'concentracion' => '600 mg',
             'via_administracion' => 'oral',
@@ -135,4 +143,3 @@ class FarmaciaModuleTest extends TestCase
         $this->assertFalse(DB::table('medicamento')->where('id_medicamento', $id)->exists());
     }
 }
-

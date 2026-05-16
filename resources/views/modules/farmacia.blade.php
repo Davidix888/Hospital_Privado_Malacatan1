@@ -26,7 +26,7 @@
         cursor: pointer;
     }
     .farm-nav button.active {
-        background: linear-gradient(112deg, #0f2e53, #1f4f86);
+        background: #0f2e53;
         color: #fff;
         border-color: transparent;
     }
@@ -86,6 +86,7 @@
         color: #17365c;
     }
     .form-input:focus { outline: none; border-color: #74aee9; box-shadow: 0 0 0 3px rgba(116, 174, 233, .2); }
+    .field-error { margin-top: 4px; color: #b42318; font-size: 12px; font-weight: 600; }
     .row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .inline-box {
         margin-top: 8px;
@@ -379,10 +380,11 @@
 @endif
 
 <div class="farm-nav" id="farmNav" data-initial-section="{{ $activeSection }}">
-    <button type="button" data-target="sec-catalogo" class="{{ $activeSection === 'sec-catalogo' ? 'active' : '' }}">Catálogo</button>
+    <button type="button" data-target="sec-catalogo" class="{{ $activeSection === 'sec-catalogo' ? 'active' : '' }}">Medicamento</button>
     <button type="button" data-target="sec-compras" class="{{ $activeSection === 'sec-compras' ? 'active' : '' }}">Compras</button>
     <button type="button" data-target="sec-ventas" class="{{ $activeSection === 'sec-ventas' ? 'active' : '' }}">Ventas</button>
-    <button type="button" data-target="sec-devoluciones" class="{{ $activeSection === 'sec-devoluciones' ? 'active' : '' }}">Devoluciones</button>
+    <button type="button" data-target="sec-devoluciones-compras" class="{{ $activeSection === 'sec-devoluciones-compras' ? 'active' : '' }}">Dev. Compras</button>
+    <button type="button" data-target="sec-devoluciones" class="{{ $activeSection === 'sec-devoluciones' ? 'active' : '' }}">Dev. Ventas</button>
     <button type="button" data-target="sec-inventario" class="{{ $activeSection === 'sec-inventario' ? 'active' : '' }}">Inventario</button>
     <button type="button" data-target="sec-lotes" class="{{ $activeSection === 'sec-lotes' ? 'active' : '' }}">Lotes</button>
 </div>
@@ -397,22 +399,25 @@
 
                     <div class="field">
                         <label>Nombre del medicamento</label>
-                        <input class="form-input" name="nombre" required placeholder="Ej: Aspirina">
+                        <input class="form-input" name="nombre" value="{{ old('nombre') }}" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios" placeholder="Ej: Aspirina">
+                        @error('nombre') <div class="field-error">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="field">
                         <label>Categoría</label>
-                        <select class="form-input" id="id_categoria" name="id_categoria">
-                            <option value="">Sin categoría</option>
+                        <select class="form-input" id="id_categoria" name="id_categoria" required>
+                            <option value="">Seleccionar categoría...</option>
                             @foreach ($categorias as $categoria)
-                                <option value="{{ $categoria->id_categoria }}">{{ $categoria->nombre_categoria }}</option>
+                                <option value="{{ $categoria->id_categoria }}" @selected((string) old('id_categoria') === (string) $categoria->id_categoria)>{{ $categoria->nombre_categoria }}</option>
                             @endforeach
-                            <option value="__nueva__">+ Registrar categoría nueva</option>
+                            <option value="__nueva__" @selected(old('id_categoria') === '__nueva__')>+ Registrar categoría nueva</option>
                         </select>
+                        @error('id_categoria') <div class="field-error">{{ $message }}</div> @enderror
                         <div id="box_nueva_categoria" class="inline-box">
                             <div class="field" style="margin:0;">
                                 <label>Nombre de categoría nueva</label>
-                                <input class="form-input" name="nueva_categoria" placeholder="Ej: Antiinflamatorio">
+                                <input class="form-input" name="nueva_categoria" value="{{ old('nueva_categoria') }}" pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios" placeholder="Ej: Antiinflamatorio">
+                                @error('nueva_categoria') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>
@@ -420,17 +425,20 @@
                     <div class="row-2">
                         <div class="field">
                             <label>Presentación</label>
-                            <input class="form-input" name="presentacion" placeholder="Tableta, jarabe, ampolla...">
+                            <input class="form-input" name="presentacion" value="{{ old('presentacion') }}" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios" placeholder="Tableta, jarabe, ampolla...">
+                            @error('presentacion') <div class="field-error">{{ $message }}</div> @enderror
                         </div>
                         <div class="field">
                             <label>Concentración</label>
-                            <input class="form-input" name="concentracion" placeholder="500 mg, 250 mg/5 ml...">
+                            <input class="form-input" name="concentracion" value="{{ old('concentracion') }}" required placeholder="500 mg, 250 mg/5 ml...">
+                            @error('concentracion') <div class="field-error">{{ $message }}</div> @enderror
                         </div>
                     </div>
 
                     <div class="field">
                         <label>Vía de administración</label>
-                        <input class="form-input" name="via_administracion" placeholder="Oral, intramuscular, intravenosa...">
+                        <input class="form-input" name="via_administracion" value="{{ old('via_administracion') }}" required pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios" placeholder="Oral, intramuscular, intravenosa...">
+                        @error('via_administracion') <div class="field-error">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="field">
@@ -440,11 +448,13 @@
 
                     <div class="field">
                         <label>Descripción (opcional)</label>
-                        <input class="form-input" name="descripcion" placeholder="Observaciones relevantes del medicamento">
+                        <input class="form-input" name="descripcion" value="{{ old('descripcion') }}" placeholder="Observaciones relevantes del medicamento">
+                        @error('descripcion') <div class="field-error">{{ $message }}</div> @enderror
                     </div>
 
-                    <button class="btn" type="submit">Guardar medicamento</button>
-                </form>
+                <button class="btn" type="submit">Guardar medicamento</button>
+            </form>
+
         </div>
 
         <div>
@@ -637,7 +647,11 @@
             <p>Ingrese los datos para registrar la compra</p>
             <form method="POST" action="{{ route('farmacia.compras.store') }}">
                 @csrf
+                <input type="hidden" name="_active_section" value="sec-compras">
                 <div id="compra-items">
+                    @error('items')
+                        <div class="field-error" style="margin-bottom:8px;">{{ $message }}</div>
+                    @enderror
                     @foreach ($oldCompraItems as $idx => $oldItem)
                     <div class="inline-box show compra-item" data-index="{{ $idx }}" style="margin-bottom:10px;">
                         <div class="row-2">
@@ -655,7 +669,7 @@
                                     @endforeach
                                 </select>
                                 @error("items.$idx.id_medicamento")
-                                    <div class="alert js-compra-error" style="margin-top:6px;">{{ $message }}</div>
+                                    <div class="field-error js-compra-error">{{ $message }}</div>
                                 @enderror
                                 <p class="muted js-compra-med-warning" style="font-size:12px;margin-top:6px;"></p>
                             </div>
@@ -663,7 +677,7 @@
                                 <label>Cantidad</label>
                                 <input class="form-input js-compra-cantidad" type="number" min="1" name="items[{{ $idx }}][cantidad]" value="{{ $oldItem['cantidad'] ?? '' }}" required>
                                 @error("items.$idx.cantidad")
-                                    <div class="alert js-compra-error" style="margin-top:6px;">{{ $message }}</div>
+                                    <div class="field-error js-compra-error">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -673,14 +687,14 @@
                                 <label>Fecha de vencimiento</label>
                                 <input class="form-input" type="date" name="items[{{ $idx }}][fecha_vencimiento]" value="{{ $oldItem['fecha_vencimiento'] ?? '' }}" required>
                                 @error("items.$idx.fecha_vencimiento")
-                                    <div class="alert js-compra-error" style="margin-top:6px;">{{ $message }}</div>
+                                    <div class="field-error js-compra-error">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="field">
                                 <label>Precio de compra unitario</label>
-                                <input class="form-input js-compra-precio" type="number" step="0.01" min="0" name="items[{{ $idx }}][precio_compra]" value="{{ $oldItem['precio_compra'] ?? '' }}" required>
+                                <input class="form-input js-compra-precio" type="number" step="0.01" min="0.01" name="items[{{ $idx }}][precio_compra]" value="{{ $oldItem['precio_compra'] ?? '' }}" required>
                                 @error("items.$idx.precio_compra")
-                                    <div class="alert js-compra-error" style="margin-top:6px;">{{ $message }}</div>
+                                    <div class="field-error js-compra-error">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -688,9 +702,9 @@
                         <div class="row-2">
                             <div class="field">
                                 <label>Precio de venta unitario del lote</label>
-                                <input class="form-input" type="number" step="0.01" min="0" name="items[{{ $idx }}][precio_venta]" value="{{ $oldItem['precio_venta'] ?? '' }}" required>
+                                <input class="form-input" type="number" step="0.01" min="0.01" name="items[{{ $idx }}][precio_venta]" value="{{ $oldItem['precio_venta'] ?? '' }}" required>
                                 @error("items.$idx.precio_venta")
-                                    <div class="alert js-compra-error" style="margin-top:6px;">{{ $message }}</div>
+                                    <div class="field-error js-compra-error">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="field">
@@ -710,24 +724,28 @@
                     <select class="form-input" id="id_proveedor" name="id_proveedor">
                         <option value="">Sin proveedor</option>
                         @foreach ($proveedores as $proveedor)
-                            <option value="{{ $proveedor->id_proveedor }}">{{ $proveedor->nombre_empresa }}</option>
+                            <option value="{{ $proveedor->id_proveedor }}" @selected((string) old('id_proveedor') === (string) $proveedor->id_proveedor)>{{ $proveedor->nombre_empresa }}</option>
                         @endforeach
-                        <option value="__nuevo__">+ Registrar proveedor nuevo</option>
+                        <option value="__nuevo__" @selected(old('id_proveedor') === '__nuevo__')>+ Registrar proveedor nuevo</option>
                     </select>
+                    @error('id_proveedor') <div class="field-error">{{ $message }}</div> @enderror
                     <div id="box_nuevo_proveedor" class="inline-box">
                         <div class="row-2">
                             <div class="field">
                                 <label>Nombre de empresa</label>
-                                <input class="form-input" name="nuevo_proveedor_nombre" placeholder="Ej: Distribuidora Médica del Sur">
+                                <input class="form-input" name="nuevo_proveedor_nombre" value="{{ old('nuevo_proveedor_nombre') }}" placeholder="Ej: Distribuidora Médica del Sur">
+                                @error('nuevo_proveedor_nombre') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                             <div class="field">
                                 <label>Teléfono</label>
-                                <input class="form-input" name="nuevo_proveedor_telefono" placeholder="Ej: 5555-5555">
+                                <input class="form-input" name="nuevo_proveedor_telefono" value="{{ old('nuevo_proveedor_telefono') }}" placeholder="Ej: 5555-5555">
+                                @error('nuevo_proveedor_telefono') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="field">
                             <label>Correo</label>
-                            <input class="form-input" type="email" name="nuevo_proveedor_correo" placeholder="correo@empresa.com">
+                            <input class="form-input" type="email" name="nuevo_proveedor_correo" value="{{ old('nuevo_proveedor_correo') }}" placeholder="correo@empresa.com">
+                            @error('nuevo_proveedor_correo') <div class="field-error">{{ $message }}</div> @enderror
                         </div>
                     </div>
                 </div>
@@ -735,7 +753,8 @@
                 <div class="row-2">
                     <div class="field">
                         <label>Fecha de compra</label>
-                        <input class="form-input" type="date" name="fecha" value="{{ old('fecha', now()->toDateString()) }}" required>
+                        <input class="form-input" type="date" name="fecha" max="{{ now()->toDateString() }}" value="{{ old('fecha', now()->toDateString()) }}" required>
+                        @error('fecha') <div class="field-error">{{ $message }}</div> @enderror
                     </div>
                     <div class="field">
                         <label>Total general</label>
@@ -761,10 +780,24 @@
         <div class="card farm-card form-card ventas-form-card">
             <h2>Registrar venta</h2>
             <p>Ingrese los datos para registrar la venta</p>
-            <form method="POST" action="{{ route('farmacia.ventas.store') }}">
+            <form method="POST" action="{{ route('farmacia.ventas.store') }}" id="venta-form">
                 @csrf
                 <input type="hidden" name="_active_section" value="sec-ventas">
+                @if ($activeSection === 'sec-ventas' && $errors->any())
+                    <div class="alert warn" style="margin-bottom:10px;">
+                        <strong>No se pudo registrar la venta.</strong>
+                        <ul style="margin:8px 0 0 18px;">
+                            @foreach ($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                <div id="venta-alerta-cliente" class="alert warn" style="display:none;margin-bottom:10px;"></div>
                 <div id="venta-items">
+                    @error('items')
+                        <div class="field-error" style="margin-bottom:8px;">{{ $message }}</div>
+                    @enderror
                     @foreach ($oldVentaItems as $idx => $oldItem)
                     <div class="inline-box show sale-item" data-index="{{ $idx }}" style="margin-bottom:10px;">
                         <div class="row-2">
@@ -784,13 +817,16 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                @error("items.$idx.id_medicamento")
+                                    <div class="field-error js-venta-error">{{ $message }}</div>
+                                @enderror
                                 <p class="muted js-venta-med-warning" style="font-size:12px;margin-top:6px;"></p>
                             </div>
                             <div class="field">
                                 <label>Cantidad</label>
                                 <input class="form-input js-venta-cantidad" type="number" min="1" name="items[{{ $idx }}][cantidad]" value="{{ $oldItem['cantidad'] ?? '' }}" required>
                                 @error("items.$idx.cantidad")
-                                    <div class="alert js-venta-error" style="margin-top:6px;">{{ $message }}</div>
+                                    <div class="field-error js-venta-error">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -812,69 +848,108 @@
 
                 <div class="field">
                     <label>Paciente</label>
-                    <select class="form-input" id="id_paciente" name="id_paciente">
-                        <option value="">Consumidor general</option>
-                        @foreach ($pacientes as $paciente)
-                            <option value="{{ $paciente->id_paciente }}">{{ $paciente->nombre }} {{ $paciente->apellido }}</option>
-                        @endforeach
-                        <option value="__nuevo__">+ Registrar paciente nuevo</option>
-                    </select>
-                    <div id="box_nuevo_paciente" class="inline-box">
+                    <input type="hidden" id="consumidor_final_hidden" name="consumidor_final" value="{{ old('consumidor_final', 0) ? 1 : 0 }}">
+                    <button
+                        class="form-input"
+                        style="text-align:left;cursor:pointer;"
+                        type="button"
+                        id="toggle-paciente-box"
+                    >Paciente</button>
+                    @error('id_paciente') <div class="field-error">{{ $message }}</div> @enderror
+                    <div id="box_nuevo_paciente" class="inline-box {{ old('id_paciente') || old('nuevo_paciente_nit') || old('nuevo_paciente_dpi') || old('nuevo_paciente_nombre') || old('nuevo_paciente_apellido') || !old('consumidor_final', true) ? 'show' : '' }}">
+                        <div class="field" style="margin-bottom:10px;">
+                            <label style="display:flex;align-items:center;gap:8px;">
+                                <input type="checkbox" id="consumidor_final" value="1" @checked(old('consumidor_final', false))>
+                                Consumidor final (no guardar datos del paciente)
+                            </label>
+                            @error('consumidor_final') <div class="field-error">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="field">
+                            <label>Paciente existente</label>
+                            <select class="form-input" id="id_paciente" name="id_paciente">
+                                <option value="">Seleccione...</option>
+                                @foreach ($pacientes as $paciente)
+                                    <option
+                                        value="{{ $paciente->id_paciente }}"
+                                        data-nombre="{{ $paciente->nombre }}"
+                                        data-apellido="{{ $paciente->apellido }}"
+                                        data-telefono="{{ $paciente->telefono ?? '' }}"
+                                        data-correo="{{ $paciente->correo ?? '' }}"
+                                        data-fecha-nacimiento="{{ $paciente->fecha_nacimiento ?? '' }}"
+                                        data-genero="{{ $paciente->genero ?? '' }}"
+                                        data-nit="{{ $paciente->nit ?? '' }}"
+                                        data-dpi="{{ $paciente->dpi ?? '' }}"
+                                        data-direccion="{{ $paciente->direccion ?? '' }}"
+                                        @selected((string) old('id_paciente') === (string) $paciente->id_paciente)
+                                    >{{ $paciente->nombre }} {{ $paciente->apellido }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="row-2">
                             <div class="field">
                                 <label>Nombre</label>
-                                <input class="form-input" name="nuevo_paciente_nombre" placeholder="Nombre">
+                                <input class="form-input" name="nuevo_paciente_nombre" value="{{ old('nuevo_paciente_nombre') }}" placeholder="Nombre">
+                                @error('nuevo_paciente_nombre') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                             <div class="field">
                                 <label>Apellido</label>
-                                <input class="form-input" name="nuevo_paciente_apellido" placeholder="Apellido">
+                                <input class="form-input" name="nuevo_paciente_apellido" value="{{ old('nuevo_paciente_apellido') }}" placeholder="Apellido">
+                                @error('nuevo_paciente_apellido') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row-2">
                             <div class="field">
                                 <label>Teléfono</label>
-                                <input class="form-input" name="nuevo_paciente_telefono" placeholder="Ej: 5555-5555">
+                                <input class="form-input" name="nuevo_paciente_telefono" value="{{ old('nuevo_paciente_telefono') }}" placeholder="Ej: 5555-5555">
+                                @error('nuevo_paciente_telefono') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                             <div class="field">
                                 <label>Correo</label>
-                                <input class="form-input" type="email" name="nuevo_paciente_correo" placeholder="correo@dominio.com">
+                                <input class="form-input" type="email" name="nuevo_paciente_correo" value="{{ old('nuevo_paciente_correo') }}" placeholder="correo@dominio.com">
+                                @error('nuevo_paciente_correo') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row-2">
                             <div class="field">
                                 <label>Fecha de nacimiento</label>
-                                <input class="form-input" type="date" name="nuevo_paciente_fecha_nacimiento">
+                                <input class="form-input" type="date" name="nuevo_paciente_fecha_nacimiento" value="{{ old('nuevo_paciente_fecha_nacimiento') }}">
+                                @error('nuevo_paciente_fecha_nacimiento') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                             <div class="field">
                                 <label>Género</label>
                                 <select class="form-input" name="nuevo_paciente_genero">
                                     <option value="">Seleccione...</option>
-                                    <option value="Femenino">Femenino</option>
-                                    <option value="Masculino">Masculino</option>
-                                    <option value="Otro">Otro</option>
+                                    <option value="Femenino" @selected(old('nuevo_paciente_genero') === 'Femenino')>Femenino</option>
+                                    <option value="Masculino" @selected(old('nuevo_paciente_genero') === 'Masculino')>Masculino</option>
+                                    <option value="Otro" @selected(old('nuevo_paciente_genero') === 'Otro')>Otro</option>
                                 </select>
+                                @error('nuevo_paciente_genero') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="row-2">
                             <div class="field">
                                 <label>NIT</label>
-                                <input class="form-input" id="nuevo_paciente_nit" name="nuevo_paciente_nit" placeholder="Ej: CF o 1234567-8">
+                                <input class="form-input" id="nuevo_paciente_nit" name="nuevo_paciente_nit" value="{{ old('nuevo_paciente_nit') }}" placeholder="Ej: CF o 1234567-8">
+                                @error('nuevo_paciente_nit') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                             <div class="field">
                                 <label>DPI</label>
-                                <input class="form-input" name="nuevo_paciente_dpi" placeholder="Ej: 1234 56789 0101">
+                                <input class="form-input" name="nuevo_paciente_dpi" value="{{ old('nuevo_paciente_dpi') }}" placeholder="Ej: 1234 56789 0101">
+                                @error('nuevo_paciente_dpi') <div class="field-error">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="field">
                             <label>Dirección</label>
-                            <input class="form-input" name="nuevo_paciente_direccion" placeholder="Dirección de residencia">
+                            <input class="form-input" name="nuevo_paciente_direccion" value="{{ old('nuevo_paciente_direccion') }}" placeholder="Dirección de residencia">
+                            @error('nuevo_paciente_direccion') <div class="field-error">{{ $message }}</div> @enderror
                         </div>
                     </div>
                 </div>
 
                 <div class="field">
                     <label>Fecha de venta</label>
-                    <input class="form-input" type="date" name="fecha" value="{{ old('fecha', now()->toDateString()) }}" required>
+                    <input class="form-input" type="date" name="fecha" max="{{ now()->toDateString() }}" value="{{ old('fecha', now()->toDateString()) }}" required>
+                    @error('fecha') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
 
                 <button class="btn" type="submit">Guardar venta</button>
@@ -912,6 +987,8 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('id_venta') <div class="field-error">{{ $message }}</div> @enderror
+                    @error('id_lote') <div class="field-error">{{ $message }}</div> @enderror
                 </div>
 
                 <input type="hidden" name="id_venta" id="devolucion_id_venta">
@@ -921,6 +998,7 @@
                     <div class="field">
                         <label>Cantidad a devolver</label>
                         <input class="form-input" type="number" min="1" name="cantidad" id="devolucion_cantidad" required>
+                        @error('cantidad') <div class="field-error">{{ $message }}</div> @enderror
                     </div>
                     <div class="field">
                         <label>Disponible para devolver</label>
@@ -931,11 +1009,13 @@
                 <div class="row-2">
                     <div class="field">
                         <label>Fecha de devolución</label>
-                        <input class="form-input" type="date" name="fecha" value="{{ now()->toDateString() }}" required>
+                        <input class="form-input" type="date" name="fecha" max="{{ now()->toDateString() }}" value="{{ old('fecha', now()->toDateString()) }}" required>
+                        @error('fecha') <div class="field-error">{{ $message }}</div> @enderror
                     </div>
                     <div class="field">
                         <label>Motivo</label>
-                        <input class="form-input" name="motivo" placeholder="Producto en mal estado, error de despacho, etc.">
+                        <input class="form-input" name="motivo" value="{{ old('motivo') }}" placeholder="Producto en mal estado, error de despacho, etc.">
+                        @error('motivo') <div class="field-error">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
@@ -996,7 +1076,7 @@
                     <tbody id="dev-tbody">
                         @forelse ($ventasParaDevolver as $linea)
                             @php
-                                $pacienteDev = trim(($linea->paciente_nombre ?? '').' '.($linea->paciente_apellido ?? '')) ?: 'Consumidor general';
+                                $pacienteDev = trim(($linea->paciente_nombre ?? '').' '.($linea->paciente_apellido ?? '')) ?: 'CF';
                             @endphp
                             <tr
                                 data-venta="{{ (string) $linea->id_venta }}"
@@ -1020,6 +1100,138 @@
             </div>
             <div class="table-pagination-frame">
                 <div id="dev-pagination" class="lotes-pagination"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="sec-devoluciones-compras" class="farm-section {{ $activeSection === 'sec-devoluciones-compras' ? 'active' : '' }}">
+    <div class="catalog-grid">
+        <div class="card farm-card form-card devolucion-form-card">
+            <h2>Registrar devolución de compra</h2>
+            <p>Ingrese los datos solicitados para devolver una compra</p>
+            <form method="POST" action="{{ route('farmacia.devoluciones_compras.store') }}">
+                @csrf
+                <input type="hidden" name="_active_section" value="sec-devoluciones-compras">
+
+                <div class="field">
+                    <label>Línea de compra</label>
+                    <select class="form-input" id="devolucion_compra_linea">
+                        <option value="">Seleccione...</option>
+                        @foreach ($comprasParaDevolver as $linea)
+                            <option
+                                value="{{ $linea->id_compra_abastecimiento }}|{{ $linea->id_lote }}"
+                                data-disponible="{{ $linea->cantidad_disponible }}"
+                            >
+                                Compra #{{ $linea->id_compra_abastecimiento }} | Lote #{{ $linea->id_lote }} | {{ $linea->medicamento }} | Disp: {{ $linea->cantidad_disponible }} | Fecha: {{ $linea->fecha }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_compra_abastecimiento') <div class="field-error">{{ $message }}</div> @enderror
+                    @error('id_lote') <div class="field-error">{{ $message }}</div> @enderror
+                </div>
+
+                <input type="hidden" name="id_compra_abastecimiento" id="devolucion_compra_id_compra">
+                <input type="hidden" name="id_lote" id="devolucion_compra_id_lote">
+
+                <div class="row-2">
+                    <div class="field">
+                        <label>Cantidad a devolver</label>
+                        <input class="form-input" type="number" min="1" name="cantidad" id="devolucion_compra_cantidad" required>
+                        @error('cantidad') <div class="field-error">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="field">
+                        <label>Disponible para devolver</label>
+                        <input class="form-input" id="devolucion_compra_disponible" value="0" disabled>
+                    </div>
+                </div>
+
+                <div class="row-2">
+                    <div class="field">
+                        <label>Fecha de devolución</label>
+                        <input class="form-input" type="date" name="fecha" max="{{ now()->toDateString() }}" value="{{ old('fecha', now()->toDateString()) }}" required>
+                        @error('fecha') <div class="field-error">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="field">
+                        <label>Motivo</label>
+                        <input class="form-input" name="motivo" value="{{ old('motivo') }}" placeholder="Producto dañado, devolución a proveedor, etc.">
+                        @error('motivo') <div class="field-error">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+
+                <button class="btn" type="submit">Guardar devolución de compra</button>
+            </form>
+        </div>
+
+        <div>
+            <h2 class="section-title" style="margin-top:0;">Compras con saldo para devolución</h2>
+            <div class="card farm-card lotes-filter-panel" style="padding:12px;margin-bottom:10px;">
+                <div class="meds-filter-scroll">
+                <div class="lotes-filters">
+                    <div class="field">
+                        <label>ID compra</label>
+                        <input id="flt-devc-compra" class="form-input" placeholder="Ej: 2048">
+                    </div>
+                    <div class="field">
+                        <label>Proveedor</label>
+                        <input id="flt-devc-prov" class="form-input" placeholder="Buscar por proveedor">
+                    </div>
+                    <div class="field">
+                        <label>Fecha desde</label>
+                        <input id="flt-devc-fecha-desde" class="form-input" type="date">
+                    </div>
+                    <div class="field">
+                        <label>Fecha hasta</label>
+                        <input id="flt-devc-fecha-hasta" class="form-input" type="date">
+                    </div>
+                    <div class="lotes-filter-actions">
+                        <button type="button" class="btn btn-dark btn-sm" id="flt-devc-clear">Limpiar</button>
+                    </div>
+                </div>
+                </div>
+                <p id="devc-count" class="lotes-count"></p>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID compra</th>
+                            <th>Fecha</th>
+                            <th>Lote</th>
+                            <th>Medicamento</th>
+                            <th>Proveedor</th>
+                            <th>Comprado</th>
+                            <th>Devuelto</th>
+                            <th>Disponible</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devc-tbody">
+                        @forelse ($comprasParaDevolver as $linea)
+                            @php
+                                $proveedorDevCompra = (string) ($linea->proveedor_nombre ?? 'N/A');
+                            @endphp
+                            <tr
+                                data-compra="{{ (string) $linea->id_compra_abastecimiento }}"
+                                data-prov="{{ mb_strtolower($proveedorDevCompra) }}"
+                                data-fecha="{{ (string) ($linea->fecha ?? '') }}"
+                            >
+                                <td>{{ $linea->id_compra_abastecimiento }}</td>
+                                <td>{{ $linea->fecha }}</td>
+                                <td>{{ $linea->id_lote }}</td>
+                                <td>{{ $linea->medicamento }}</td>
+                                <td>{{ $proveedorDevCompra }}</td>
+                                <td>{{ (int) $linea->cantidad_comprada }}</td>
+                                <td>{{ (int) $linea->cantidad_devuelta }}</td>
+                                <td>{{ (int) $linea->cantidad_disponible }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="8">No hay líneas de compra disponibles para devolución.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-pagination-frame">
+                <div id="devc-pagination" class="lotes-pagination"></div>
             </div>
         </div>
     </div>
@@ -1259,18 +1471,102 @@
 
     const selPaciente = document.getElementById('id_paciente');
     const boxPaciente = document.getElementById('box_nuevo_paciente');
+    const btnTogglePaciente = document.getElementById('toggle-paciente-box');
+    const chkConsumidorFinal = document.getElementById('consumidor_final');
+    const inConsumidorFinalHidden = document.getElementById('consumidor_final_hidden');
     const inPacNombre = document.querySelector('input[name="nuevo_paciente_nombre"]');
     const inPacApellido = document.querySelector('input[name="nuevo_paciente_apellido"]');
+    const inPacTelefono = document.querySelector('input[name="nuevo_paciente_telefono"]');
+    const inPacCorreo = document.querySelector('input[name="nuevo_paciente_correo"]');
+    const inPacFechaNac = document.querySelector('input[name="nuevo_paciente_fecha_nacimiento"]');
+    const inPacGenero = document.querySelector('select[name="nuevo_paciente_genero"]');
     const inPacNit = document.getElementById('nuevo_paciente_nit');
-    const togglePaciente = () => {
-        const isNuevo = selPaciente.value === '__nuevo__';
-        boxPaciente.classList.toggle('show', isNuevo);
-        [inPacNombre, inPacApellido, inPacNit].forEach((input) => {
-            if (!input) return;
-            input.required = isNuevo;
-        });
+    const inPacDpi = document.querySelector('input[name="nuevo_paciente_dpi"]');
+    const inPacDireccion = document.querySelector('input[name="nuevo_paciente_direccion"]');
+
+    const clearPacienteFields = () => {
+        if (inPacNombre) inPacNombre.value = '';
+        if (inPacApellido) inPacApellido.value = '';
+        if (inPacTelefono) inPacTelefono.value = '';
+        if (inPacCorreo) inPacCorreo.value = '';
+        if (inPacFechaNac) inPacFechaNac.value = '';
+        if (inPacGenero) inPacGenero.value = '';
+        if (inPacNit) inPacNit.value = '';
+        if (inPacDpi) inPacDpi.value = '';
+        if (inPacDireccion) inPacDireccion.value = '';
     };
-    selPaciente.addEventListener('change', togglePaciente);
+
+    const fillPacienteFieldsFromOption = (opt) => {
+        if (!opt) return;
+        if (inPacNombre) inPacNombre.value = opt.dataset.nombre || '';
+        if (inPacApellido) inPacApellido.value = opt.dataset.apellido || '';
+        if (inPacTelefono) inPacTelefono.value = opt.dataset.telefono || '';
+        if (inPacCorreo) inPacCorreo.value = opt.dataset.correo || '';
+        if (inPacFechaNac) inPacFechaNac.value = opt.dataset.fechaNacimiento || '';
+        if (inPacGenero) inPacGenero.value = opt.dataset.genero || '';
+        if (inPacNit) inPacNit.value = opt.dataset.nit || '';
+        if (inPacDpi) inPacDpi.value = opt.dataset.dpi || '';
+        if (inPacDireccion) inPacDireccion.value = opt.dataset.direccion || '';
+    };
+
+    const findPacienteOptionByNitOrDpi = () => {
+        const nit = ((inPacNit?.value || '').trim().toUpperCase()).replace(/[ ._]/g, '');
+        const dpi = ((inPacDpi?.value || '').trim()).replace(/\s+/g, '');
+        if (nit === '' && dpi === '') return null;
+        return Array.from(selPaciente?.options || []).find((opt) => {
+            if (!opt.value) return false;
+            const optNit = String(opt.dataset.nit || '').trim().toUpperCase().replace(/[ ._]/g, '');
+            const optDpi = String(opt.dataset.dpi || '').trim().replace(/\s+/g, '');
+            return (nit !== '' && optNit !== '' && optNit === nit) || (dpi !== '' && optDpi !== '' && optDpi === dpi);
+        }) || null;
+    };
+
+    const togglePaciente = () => {
+        const esCF = !!chkConsumidorFinal?.checked;
+
+        [inPacNombre, inPacApellido, inPacTelefono, inPacCorreo, inPacFechaNac, inPacGenero, inPacNit, inPacDpi, inPacDireccion].forEach((input) => {
+            if (!input) return;
+            input.disabled = esCF;
+            input.required = !esCF && !selPaciente?.value && (input === inPacNombre || input === inPacApellido || input === inPacNit);
+        });
+        if (inConsumidorFinalHidden) {
+            inConsumidorFinalHidden.value = esCF ? '1' : '0';
+        }
+
+        if (esCF) {
+            if (selPaciente) selPaciente.value = '';
+        }
+    };
+    btnTogglePaciente?.addEventListener('click', () => {
+        boxPaciente.classList.toggle('show');
+    });
+    selPaciente.addEventListener('change', () => {
+        if (selPaciente.value && chkConsumidorFinal) {
+            chkConsumidorFinal.checked = false;
+        }
+        const opt = selPaciente.options[selPaciente.selectedIndex];
+        if (opt && opt.value) {
+            fillPacienteFieldsFromOption(opt);
+        } else {
+            clearPacienteFields();
+        }
+        togglePaciente();
+    });
+    inPacNit?.addEventListener('blur', () => {
+        const opt = findPacienteOptionByNitOrDpi();
+        if (opt && selPaciente) {
+            selPaciente.value = opt.value;
+            fillPacienteFieldsFromOption(opt);
+        }
+    });
+    inPacDpi?.addEventListener('blur', () => {
+        const opt = findPacienteOptionByNitOrDpi();
+        if (opt && selPaciente) {
+            selPaciente.value = opt.value;
+            fillPacienteFieldsFromOption(opt);
+        }
+    });
+    chkConsumidorFinal?.addEventListener('change', togglePaciente);
     togglePaciente();
 
     function bindMedicineSearch(input, select) {
@@ -1591,6 +1887,73 @@
         recalcVentaTotals();
     }
 
+    const ventaForm = document.getElementById('venta-form');
+    const ventaClientAlert = document.getElementById('venta-alerta-cliente');
+    if (ventaForm) {
+        ventaForm.addEventListener('submit', (event) => {
+            const errores = [];
+            const lineasVenta = Array.from(document.querySelectorAll('.sale-item'));
+
+            if (lineasVenta.length === 0) {
+                errores.push('Debe agregar al menos un medicamento.');
+            }
+
+            let hayMedicamentoValido = false;
+            lineasVenta.forEach((linea, idx) => {
+                const select = linea.querySelector('.js-med-select');
+                const qty = linea.querySelector('.js-venta-cantidad');
+                const selected = (select?.value || '').trim();
+                const cantidad = parseInt(qty?.value || '0', 10);
+
+                if (selected !== '') {
+                    hayMedicamentoValido = true;
+                } else {
+                    errores.push(`L\u00ednea ${idx + 1}: seleccione un medicamento.`);
+                }
+
+                if (!Number.isInteger(cantidad) || cantidad < 1) {
+                    errores.push(`L\u00ednea ${idx + 1}: la cantidad debe ser mayor o igual a 1.`);
+                }
+            });
+
+            if (!hayMedicamentoValido) {
+                errores.push('Debe seleccionar al menos un medicamento v\u00e1lido.');
+            }
+
+            const fechaVenta = ventaForm.querySelector('input[name="fecha"]');
+            if (!fechaVenta?.value) {
+                errores.push('Debe ingresar la fecha de venta.');
+            }
+
+            const esCF = !!chkConsumidorFinal?.checked;
+            if (!esCF && !selPaciente?.value) {
+                const nombre = (inPacNombre?.value || '').trim();
+                const apellido = (inPacApellido?.value || '').trim();
+                let nit = (inPacNit?.value || '').trim().toUpperCase();
+                nit = nit.replace(/[ ._]/g, '');
+                if (nit === 'C/F') nit = 'CF';
+                if (inPacNit) inPacNit.value = nit;
+                if (nit === '') errores.push('Paciente: el NIT es obligatorio.');
+                if (nit !== 'CF') {
+                    if (nombre === '') errores.push('Paciente: el nombre es obligatorio.');
+                    if (apellido === '') errores.push('Paciente: el apellido es obligatorio.');
+                }
+            }
+
+            if (errores.length > 0) {
+                event.preventDefault();
+                if (ventaClientAlert) {
+                    ventaClientAlert.style.display = 'block';
+                    ventaClientAlert.innerHTML = `<strong>Revisa los datos del formulario:</strong><ul style="margin:8px 0 0 18px;">${errores.map((e) => `<li>${e}</li>`).join('')}</ul>`;
+                }
+                window.alert(`No se pudo guardar la venta:\n- ${errores.join('\n- ')}`);
+            } else if (ventaClientAlert) {
+                ventaClientAlert.style.display = 'none';
+                ventaClientAlert.innerHTML = '';
+            }
+        });
+    }
+
     const globalSearchInput = document.getElementById('venta-busqueda-global');
     const globalSuggestions = document.getElementById('venta-sugerencias');
     const globalEmpty = document.getElementById('venta-sugerencias-empty');
@@ -1678,6 +2041,39 @@
         syncDevolucion();
     }
 
+    const selDevolucionCompraLinea = document.getElementById('devolucion_compra_linea');
+    const inCompra = document.getElementById('devolucion_compra_id_compra');
+    const inLoteCompra = document.getElementById('devolucion_compra_id_lote');
+    const inDisponibleCompra = document.getElementById('devolucion_compra_disponible');
+    const inCantidadCompra = document.getElementById('devolucion_compra_cantidad');
+
+    if (selDevolucionCompraLinea && inCompra && inLoteCompra && inDisponibleCompra && inCantidadCompra) {
+        const syncDevolucionCompra = () => {
+            const val = selDevolucionCompraLinea.value || '';
+            if (!val.includes('|')) {
+                inCompra.value = '';
+                inLoteCompra.value = '';
+                inDisponibleCompra.value = '0';
+                inCantidadCompra.max = '';
+                return;
+            }
+
+            const [compra, lote] = val.split('|');
+            inCompra.value = compra;
+            inLoteCompra.value = lote;
+            const opt = selDevolucionCompraLinea.options[selDevolucionCompraLinea.selectedIndex];
+            const disponible = parseInt(opt?.dataset?.disponible || '0', 10);
+            inDisponibleCompra.value = String(disponible);
+            inCantidadCompra.max = String(Math.max(1, disponible));
+            if (!inCantidadCompra.value || parseInt(inCantidadCompra.value, 10) < 1) {
+                inCantidadCompra.value = '1';
+            }
+        };
+
+        selDevolucionCompraLinea.addEventListener('change', syncDevolucionCompra);
+        syncDevolucionCompra();
+    }
+
     const fltLoteMed = document.getElementById('flt-lote-med');
     const fltLoteVDesde = document.getElementById('flt-lote-venc-desde');
     const fltLoteVHasta = document.getElementById('flt-lote-venc-hasta');
@@ -1711,6 +2107,14 @@
     const devTbody = document.getElementById('dev-tbody');
     const devCount = document.getElementById('dev-count');
     const devPagination = document.getElementById('dev-pagination');
+    const fltDevcCompra = document.getElementById('flt-devc-compra');
+    const fltDevcProv = document.getElementById('flt-devc-prov');
+    const fltDevcFechaDesde = document.getElementById('flt-devc-fecha-desde');
+    const fltDevcFechaHasta = document.getElementById('flt-devc-fecha-hasta');
+    const fltDevcClear = document.getElementById('flt-devc-clear');
+    const devcTbody = document.getElementById('devc-tbody');
+    const devcCount = document.getElementById('devc-count');
+    const devcPagination = document.getElementById('devc-pagination');
 
     if (medsTbody && medsCount && medsPagination) {
         const rows = Array.from(medsTbody.querySelectorAll('tr[data-nombre]'));
@@ -1962,6 +2366,89 @@
         });
 
         applyDevFilters();
+    }
+
+    if (devcTbody && devcCount && devcPagination) {
+        const rows = Array.from(devcTbody.querySelectorAll('tr[data-compra]'));
+        const pageSize = 8;
+        let currentPage = 1;
+
+        const renderPagination = (totalPages) => {
+            devcPagination.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            for (let page = 1; page <= totalPages; page += 1) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `lotes-page-btn${page === currentPage ? ' active' : ''}`;
+                btn.textContent = String(page);
+                btn.addEventListener('click', () => {
+                    currentPage = page;
+                    applyDevcFilters();
+                });
+                devcPagination.appendChild(btn);
+            }
+        };
+
+        const applyDevcFilters = () => {
+            const qCompra = (fltDevcCompra?.value || '').trim().toLowerCase();
+            const qProv = (fltDevcProv?.value || '').trim().toLowerCase();
+            const fDesde = fltDevcFechaDesde?.value || '';
+            const fHasta = fltDevcFechaHasta?.value || '';
+            const filteredRows = [];
+
+            rows.forEach((row) => {
+                const compra = (row.dataset.compra || '').toLowerCase();
+                const prov = row.dataset.prov || '';
+                const fecha = row.dataset.fecha || '';
+
+                const okCompra = qCompra === '' || compra.includes(qCompra);
+                const okProv = qProv === '' || prov.includes(qProv);
+                const okDesde = fDesde === '' || (fecha !== '' && fecha >= fDesde);
+                const okHasta = fHasta === '' || (fecha !== '' && fecha <= fHasta);
+                const show = okCompra && okProv && okDesde && okHasta;
+
+                if (show) filteredRows.push(row);
+                row.style.display = 'none';
+            });
+
+            const totalFiltered = filteredRows.length;
+            const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            filteredRows.slice(start, end).forEach((row) => {
+                row.style.display = '';
+            });
+
+            const showing = totalFiltered === 0 ? 0 : Math.min(pageSize, totalFiltered - start);
+            devcCount.textContent = `Mostrando ${showing} de ${totalFiltered} líneas de devolución filtradas.`;
+            renderPagination(totalPages);
+        };
+
+        [fltDevcCompra, fltDevcProv, fltDevcFechaDesde, fltDevcFechaHasta].forEach((el) => {
+            el?.addEventListener('input', () => {
+                currentPage = 1;
+                applyDevcFilters();
+            });
+            el?.addEventListener('change', () => {
+                currentPage = 1;
+                applyDevcFilters();
+            });
+        });
+
+        fltDevcClear?.addEventListener('click', () => {
+            if (fltDevcCompra) fltDevcCompra.value = '';
+            if (fltDevcProv) fltDevcProv.value = '';
+            if (fltDevcFechaDesde) fltDevcFechaDesde.value = '';
+            if (fltDevcFechaHasta) fltDevcFechaHasta.value = '';
+            currentPage = 1;
+            applyDevcFilters();
+        });
+
+        applyDevcFilters();
     }
 
     if (invTbody && invCount && invPagination) {
