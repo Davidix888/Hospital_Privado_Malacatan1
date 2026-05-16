@@ -6,8 +6,6 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
@@ -52,24 +50,6 @@ class AuthController extends Controller
         $request->session()->regenerate();
         Session::put('auth_usuario_id', $usuario->id_usuario);
         Session::put('auth_rol', Rol::normalizeRoleName((string) optional($usuario->rol)->nombre_rol));
-
-        if (
-            !$usuario->password_changed_at ||
-            Carbon::parse($usuario->password_changed_at)->addMonths(3)->isPast()
-        ) {
-            if ($request->boolean('remember')) {
-                Cookie::queue('remembered_usuario', $credentials['usuario'], 60 * 24 * 30);
-            } else {
-                Cookie::queue(Cookie::forget('remembered_usuario'));
-            }
-            return redirect()->route('password.force');
-        }
-
-        if ($request->boolean('remember')) {
-            Cookie::queue('remembered_usuario', $credentials['usuario'], 60 * 24 * 30);
-        } else {
-            Cookie::queue(Cookie::forget('remembered_usuario'));
-        }
 
         return redirect()->route('dashboard');
     }

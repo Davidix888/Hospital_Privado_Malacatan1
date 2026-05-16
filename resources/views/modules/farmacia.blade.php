@@ -26,7 +26,7 @@
         cursor: pointer;
     }
     .farm-nav button.active {
-        background: linear-gradient(112deg, #0f2e53, #1f4f86);
+        background: #0f2e53;
         color: #fff;
         border-color: transparent;
     }
@@ -380,7 +380,7 @@
 @endif
 
 <div class="farm-nav" id="farmNav" data-initial-section="{{ $activeSection }}">
-    <button type="button" data-target="sec-catalogo" class="{{ $activeSection === 'sec-catalogo' ? 'active' : '' }}">Médicamento</button>
+    <button type="button" data-target="sec-catalogo" class="{{ $activeSection === 'sec-catalogo' ? 'active' : '' }}">Medicamento</button>
     <button type="button" data-target="sec-compras" class="{{ $activeSection === 'sec-compras' ? 'active' : '' }}">Compras</button>
     <button type="button" data-target="sec-ventas" class="{{ $activeSection === 'sec-ventas' ? 'active' : '' }}">Ventas</button>
     <button type="button" data-target="sec-devoluciones-compras" class="{{ $activeSection === 'sec-devoluciones-compras' ? 'active' : '' }}">Dev. Compras</button>

@@ -11,10 +11,6 @@
     .login-card .input { border-bottom-color: rgba(220, 233, 248, .65); color: #f3f8ff; }
     .login-card .input::placeholder { color: rgba(220, 233, 248, .72); }
     .login-card .input:focus { border-bottom-color: #ffffff; }
-    .login-meta { margin-top: 18px; color: #c9daee; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-    .remember-wrap { display: inline-flex; align-items: center; gap: 8px; }
-    .remember-wrap input[type="checkbox"] { accent-color: #dce9f8; width: 14px; height: 14px; }
-    .link-reset { color: #d5e9ff; text-decoration: underline; }
     .login-btn { width: 100%; margin-top: 18px; border-radius: 12px; letter-spacing: .8px; font-size: 17px; padding-block: 13px; background: linear-gradient(90deg, #0f2b4d, #1a3558); border: 1px solid rgba(220, 233, 248, .35); }
 </style>
 @endpush
@@ -33,19 +29,11 @@
             @csrf
             <div class="field">
                 <label>Usuario</label>
-                <input class="input" name="usuario" value="{{ old('usuario', request()->cookie('remembered_usuario')) }}" placeholder="Ej: ldixquiac" required>
+                <input class="input" name="usuario" value="{{ old('usuario') }}" placeholder="Ej: ldixquiac" required>
             </div>
             <div class="field">
                 <label>Contraseña</label>
                 <input class="input" type="password" name="password" placeholder="********" required>
-            </div>
-
-            <div class="login-meta">
-                <label class="remember-wrap">
-                    <input type="checkbox" name="remember" value="1" {{ request()->cookie('remembered_usuario') ? 'checked' : '' }}>
-                    <span>Recordarme</span>
-                </label>
-                <a class="link-reset" href="{{ route('password.request') }}">¿Olvidó su contraseña?</a>
             </div>
 
             <button class="btn login-btn" type="submit">LOGIN</button>

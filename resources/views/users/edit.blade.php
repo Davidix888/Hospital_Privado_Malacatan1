@@ -1,4 +1,4 @@
-﻿@extends('layouts.app', ['title' => 'Editar usuario'])
+@extends('layouts.app', ['title' => 'Editar usuario'])
 
 @section('content')
 @php
@@ -31,15 +31,18 @@
 
         <div class="form-field">
             <label class="form-label">Nombres</label>
-            <input class="form-control" name="nombres" value="{{ old('nombres', $usuario->nombres) }}" required>
+            <input class="form-control" name="nombres" value="{{ old('nombres', $usuario->nombres) }}" required pattern="^(?=.*[A-Za-zÁÉÍÓÚáéíóúÑñÜü])[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios">
+            @error('nombres') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <div class="form-field">
             <label class="form-label">Apellidos</label>
-            <input class="form-control" name="apellidos" value="{{ old('apellidos', $usuario->apellidos) }}" required>
+            <input class="form-control" name="apellidos" value="{{ old('apellidos', $usuario->apellidos) }}" required pattern="^(?=.*[A-Za-zÁÉÍÓÚáéíóúÑñÜü])[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'.-]+$" title="Solo letras y espacios">
+            @error('apellidos') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <div class="form-field">
             <label class="form-label">Correo electrónico</label>
             <input class="form-control" type="email" name="correo" value="{{ old('correo', $usuario->correo) }}" required>
+            @error('correo') <div class="field-error">{{ $message }}</div> @enderror
         </div>
         <div class="form-field">
             <label class="form-label">Rol</label>
@@ -55,6 +58,17 @@
                     </option>
                 @endforeach
             </select>
+            @error('id_rol') <div class="field-error">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="form-field">
+            <label class="form-label">Nueva contraseña (solo administrador)</label>
+            <input class="form-control" type="password" name="nueva_contrasena" minlength="6" autocomplete="new-password">
+            @error('nueva_contrasena') <div class="field-error">{{ $message }}</div> @enderror
+        </div>
+        <div class="form-field">
+            <label class="form-label">Confirmar nueva contraseña</label>
+            <input class="form-control" type="password" name="nueva_contrasena_confirmation" minlength="6" autocomplete="new-password">
         </div>
 
         <label class="checkbox-row">

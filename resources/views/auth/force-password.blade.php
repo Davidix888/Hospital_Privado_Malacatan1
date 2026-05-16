@@ -1,10 +1,10 @@
-@extends('layouts.app', ['title' => 'Cambio de contraseña'])
+@extends('layouts.app', ['title' => 'Cambio de contraseÃ±a'])
 
 @section('content')
 <div class="card form-shell form-shell-sm">
     <p class="security-kicker">SEGURIDAD DE CUENTA</p>
-    <h1 class="title" style="font-size:34px;">Debes cambiar tu contraseña</h1>
-    <p class="subtitle" style="font-size:18px;">Por política de seguridad, la contraseña debe renovarse cada 3 meses.</p>
+    <h1 class="title" style="font-size:34px;">Debes cambiar tu contraseÃ±a</h1>
+    <p class="subtitle" style="font-size:18px;">Por polÃ­tica de seguridad, la contraseÃ±a debe renovarse cada 3 meses.</p>
 
     @if ($errors->any())
         <div class="alert">{{ $errors->first() }}</div>
@@ -13,19 +13,19 @@
     <form method="POST" action="{{ route('password.update') }}" class="form-grid">
         @csrf
         <div class="form-field">
-            <label class="form-label">Correo electrónico</label>
+            <label class="form-label">Correo electrÃ³nico</label>
             <input class="form-control" type="email" name="correo" value="{{ old('correo', $correo ?? '') }}" required>
         </div>
         <div class="form-field">
-            <label class="form-label">Nueva contraseña</label>
-            <input class="form-control" type="password" name="password" minlength="8" required>
+            <label class="form-label">Nueva contraseÃ±a</label>
+            <input class="form-control" type="password" name="password" minlength="6" required>
         </div>
         <div class="form-field">
-            <label class="form-label">Confirmar contraseña</label>
-            <input class="form-control" type="password" name="password_confirmation" minlength="8" required>
+            <label class="form-label">Confirmar contraseÃ±a</label>
+            <input class="form-control" type="password" name="password_confirmation" minlength="6" required>
         </div>
         <div class="form-actions">
-            <button class="btn btn-dark" type="submit">Actualizar contraseña</button>
+            <button class="btn btn-dark" type="submit">Actualizar contraseÃ±a</button>
         </div>
     </form>
 </div>
