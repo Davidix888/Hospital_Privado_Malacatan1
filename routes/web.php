@@ -40,6 +40,9 @@ Route::middleware(['auth.custom'])->group(function () {
         Route::post('/farmacia/devoluciones', [FarmaciaController::class, 'storeDevolucion'])
             ->middleware('module.access:farmacia')
             ->name('farmacia.devoluciones.store');
+        Route::post('/farmacia/devoluciones-compras', [FarmaciaController::class, 'storeDevolucionCompra'])
+            ->middleware('module.access:farmacia')
+            ->name('farmacia.devoluciones_compras.store');
         Route::post('/farmacia/medicamentos', [FarmaciaController::class, 'storeMedicamento'])
             ->middleware('module.access:farmacia')
             ->name('farmacia.medicamentos.store');
