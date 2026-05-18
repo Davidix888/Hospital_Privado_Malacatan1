@@ -8,6 +8,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class LaboratorioController extends Controller
@@ -46,6 +47,7 @@ class LaboratorioController extends Controller
                     'tipo' => (string) ($e->tipo_muestra ?? ''),
                     'info' => (string) ($e->informacion ?? ''),
                     'costo' => (float) ($e->costo ?? 0),
+                    'activo' => (int) ($e->activo ?? 1),
                 ];
             })->values();
         }
@@ -304,7 +306,14 @@ class LaboratorioController extends Controller
             'genero' => ['required', 'string', 'max:20'],
             'fecha_nacimiento' => ['required', 'date', 'before_or_equal:today'],
             'examenes' => ['required', 'array', 'min:1'],
-            'examenes.*' => ['required', 'integer', 'distinct', 'exists:examen_laboratorio,id_examen'],
+            'examenes.*' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('examen_laboratorio', 'id_examen')->where(static function ($query): void {
+                    $query->where('activo', 1);
+                }),
+            ],
             'confirmar_duplicado' => ['nullable', 'boolean'],
         ], $this->messages(), array_merge($this->attributes(), [
             'id_paciente_existente' => 'paciente existente',
@@ -578,6 +587,7 @@ class LaboratorioController extends Controller
             'array' => 'El campo :attribute debe ser una lista valida.',
             'distinct' => 'No puedes repetir el mismo examen.',
             'exists' => 'El :attribute seleccionado no existe.',
+            'examenes.*.exists' => 'Solo se pueden asignar examenes activos.',
             'min' => 'El campo :attribute debe ser como minimo :min.',
             'max' => 'El campo :attribute no puede exceder :max caracteres.',
             'unique' => 'Ya existe un examen con ese :attribute.',

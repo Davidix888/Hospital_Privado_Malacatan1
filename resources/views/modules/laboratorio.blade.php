@@ -882,7 +882,7 @@
     const pacienteDpiEmpty = document.getElementById('paciente-dpi-empty');
     const pacienteIdExistente = document.getElementById('id_paciente_existente');
     const pacientesDataset = @json($pacientesJs ?? []);
-    const examsDataset = @json($examenesJs);
+    const examsDataset = (@json($examenesJs) || []).filter((e) => Number(e.activo ?? 1) === 1);
 
     const examById = new Map(examsDataset.map((x) => [String(x.id), x]));
     const oldExams = @json(old('examenes', []));

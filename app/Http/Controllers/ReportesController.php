@@ -178,20 +178,16 @@ class ReportesController extends Controller
         }
 
         $query = DB::table('paciente_examen_laboratorio as pel')
-            ->join('usuario as u', 'u.id_usuario', '=', 'pel.id_usuario')
+            ->leftJoin('usuario as u', 'u.id_usuario', '=', 'pel.id_usuario')
             ->select(
-                'u.id_usuario',
-                DB::raw("COALESCE(u.nombres || ' ' || u.apellidos, u.nombre_usuario, 'Tecnico sin nombre') as tecnico"),
+                'pel.id_usuario',
+                DB::raw("COALESCE(NULLIF(TRIM(u.nombres || ' ' || u.apellidos), ''), u.nombre_usuario, 'Usuario # ' || pel.id_usuario) as tecnico"),
                 DB::raw('COUNT(*) as total')
             )
             ->whereNotNull('pel.id_usuario');
 
-        if (Schema::hasColumn('paciente_examen_laboratorio', 'estado')) {
-            $query->where('pel.estado', 'finalizado');
-        }
-
         return $query
-            ->groupBy('u.id_usuario', 'u.nombres', 'u.apellidos', 'u.nombre_usuario')
+            ->groupBy('pel.id_usuario', 'u.nombres', 'u.apellidos', 'u.nombre_usuario')
             ->orderByDesc('total')
             ->limit(8)
             ->get()

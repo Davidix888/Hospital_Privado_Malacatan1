@@ -135,7 +135,7 @@
 
         <article class="card panel">
             <div class="panel-head">
-                <h3>Tecnicos con mas examenes realizados</h3>
+                <h3>Tecnicos con mas ingresos registrados</h3>
             </div>
             <div class="tech-list">
                 @forelse (($chartData['tecnicosRendimiento'] ?? []) as $item)
@@ -144,7 +144,7 @@
                         <strong class="tech-total">{{ $item['total'] }}</strong>
                     </div>
                 @empty
-                    <p class="empty-text">Aun no hay examenes finalizados con tecnico asignado.</p>
+                    <p class="empty-text">Aun no hay ingresos con tecnico asignado.</p>
                 @endforelse
             </div>
         </article>
@@ -154,7 +154,6 @@
         <div class="panel-head">
             <h3>Actividad reciente de laboratorio</h3>
             <div class="export-actions">
-                <a class="btn btn-sm" href="{{ route('reportes.export', ['modulo' => 'laboratorio', 'formato' => 'excel']) }}">Excel</a>
                 <a class="btn btn-sm btn-primary" href="{{ route('reportes.export', ['modulo' => 'laboratorio', 'formato' => 'pdf']) }}" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">PDF</a>
             </div>
         </div>
